@@ -16,7 +16,7 @@ class TestCore(unittest.TestCase):
         rules = load_rules()
         with TemporaryDirectory() as tmp:
             path = Path(tmp) / "t.md"
-            path.write_text("x  \n", encoding="utf-8")
+            path.write_bytes(b"x  \n")
             config = {name: False for name in rules}
             config["trailing-whitespace"] = True
 
@@ -37,6 +37,18 @@ class TestCore(unittest.TestCase):
             self.assertEqual(len(write_calls), 1)
             self.assertEqual(write_calls[0][1].get("newline"), "")
             self.assertEqual(path.read_bytes(), b"x\n")
+
+
+    def test_trailing_whitespace_fix_preserves_crlf(self):
+        rules = load_rules()
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "crlf.md"
+            path.write_bytes(b"x  \r\n")
+            config = {name: False for name in rules}
+            config["trailing-whitespace"] = True
+
+            process_file(path, rules, config, fix=True)
+            self.assertEqual(path.read_bytes(), b"x\r\n")
 
     def test_trailing_whitespace_fix_without_final_newline_keeps_no_newline(self):
         rules = load_rules()
