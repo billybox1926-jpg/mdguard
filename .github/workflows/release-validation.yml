@@ -1,0 +1,33 @@
+name: Release validation
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  package-smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install build tooling
+        run: python -m pip install --upgrade pip build
+      - name: Build package
+        run: python -m build
+      - name: Smoke-test built wheel
+        run: |
+          python -m venv .smoke
+          . .smoke/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install dist/*.whl
+          mdguard --help
+          mdguard --list-rules
+          python -m mdguard.cli --help

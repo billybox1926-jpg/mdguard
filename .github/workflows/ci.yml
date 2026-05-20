@@ -25,3 +25,5 @@ jobs:
           else
             echo "No tests directory yet; skipping tests."
           fi
+      - name: Dogfood mdguard on repository docs
+        run: python -m mdguard.cli README.md docs/*.md --json
