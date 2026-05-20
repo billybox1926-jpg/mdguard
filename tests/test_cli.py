@@ -80,5 +80,43 @@ class TestCli(unittest.TestCase):
             self.assertIn("No Markdown files found under directory", proc.stderr)
 
 
+    def test_final_newline_fix_preserves_crlf_style(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "windows-no-final-newline.md"
+            p.write_bytes(b"# title\r\nbody")
+
+            fix_proc = subprocess.run(
+                [sys.executable, "-m", "mdguard.cli", str(p), "--fix"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(fix_proc.returncode, 0)
+            self.assertEqual(p.read_bytes(), b"# title\r\nbody\r\n")
+
+    def test_final_newline_detect_and_fix(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "no-final-newline.md"
+            p.write_text("# title", encoding="utf-8")
+
+            lint_proc = subprocess.run(
+                [sys.executable, "-m", "mdguard.cli", str(p)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(lint_proc.returncode, 1)
+            self.assertIn("file must end with a final newline [final-newline]", lint_proc.stderr)
+
+            fix_proc = subprocess.run(
+                [sys.executable, "-m", "mdguard.cli", str(p), "--fix"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(fix_proc.returncode, 0)
+            self.assertEqual(p.read_text(encoding="utf-8"), "# title\n")
+
+
 if __name__ == "__main__":
     unittest.main()
