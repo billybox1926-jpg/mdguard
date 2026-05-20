@@ -20,13 +20,23 @@ class TestCore(unittest.TestCase):
             config = {name: False for name in rules}
             config["trailing-whitespace"] = True
 
-            with patch("pathlib.Path.open", autospec=True, wraps=Path.open) as mocked_open:
+            original_open = Path.open
+            calls = []
+
+            def tracking_open(self, *args, **kwargs):
+                calls.append((args, kwargs))
+                return original_open(self, *args, **kwargs)
+
+            with patch.object(Path, "open", new=tracking_open):
                 issues = process_file(path, rules, config, fix=True)
 
             self.assertTrue(any(issue.rule == "trailing-whitespace" for issue in issues))
-            write_calls = [c for c in mocked_open.call_args_list if c.args[1] == "w"]
+            write_calls = [
+                (args, kwargs) for args, kwargs in calls if args and args[0] == "w"
+            ]
             self.assertEqual(len(write_calls), 1)
-            self.assertEqual(write_calls[0].kwargs.get("newline"), "")
+            self.assertEqual(write_calls[0][1].get("newline"), "")
+            self.assertEqual(path.read_bytes(), b"x\n")
 
     def test_trailing_whitespace_fix_without_final_newline_keeps_no_newline(self):
         rules = load_rules()
