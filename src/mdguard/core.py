@@ -161,7 +161,8 @@ def process_file(path: Path, rules: dict[str, Any], config: dict[str, Any], fix:
             issues.extend(rule["post_check"](path, ctx, config))
 
     if fix and fixed_lines != lines:
-        path.write_text("".join(fixed_lines), encoding="utf-8")
+        with path.open("w", encoding="utf-8", newline="") as f:
+            f.write("".join(fixed_lines))
         if original_encoding != "utf-8":
             print(f"💡 Converted {path} from {original_encoding.upper()} to UTF-8.", file=sys.stderr)
 
