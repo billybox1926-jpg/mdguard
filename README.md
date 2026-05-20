@@ -1,51 +1,98 @@
 # mdguard
 
-`mdguard` is a tiny, dependency-light Markdown linter and conservative autofixer for READMEs, docs folders, notes, and agent-generated repository documentation.
+`mdguard` is a tiny, dependency-light Markdown linter and conservative autofixer
+for READMEs, docs folders, notes, and agent-generated repository documentation.
 
-It is intentionally smaller than the full Markdown linting ecosystem. The goal is practical guardrails for solo developers, small repos, Windows/PowerShell users, and AI-assisted coding workflows where documentation can get messy fast.
+It is intentionally smaller than the full Markdown linting ecosystem. The goal is
+practical guardrails for solo developers, small repos, Windows/PowerShell users,
+and AI-assisted coding workflows where documentation can get messy fast.
 
 ## Status
 
-Early bootstrap. The package metadata exists, but the working source package, tests, rule modules, and CI workflow are still being built.
+Working MVP. The package has a `src/mdguard/` implementation, console entry
+point, recursive Markdown discovery, built-in rules, JSON output, conservative
+autofix, tests, and GitHub Actions CI.
 
-## Goals
+The next release-hardening work is tracked in GitHub issues. Current priorities
+are broader real-project usability, config, output schema polish, Markdown-aware
+edge cases, and release validation.
 
-- Stay small, fast, and easy to understand.
-- Prefer the Python standard library wherever possible.
-- Support a simple `src/mdguard/` package layout.
-- Provide useful human-readable output first.
-- Provide JSON output for scripts and CI.
-- Autofix only conservative, low-risk issues at first.
-- Make rule behavior easy to test and extend.
+## Install locally
 
-## Planned MVP rules
+```bash
+python -m pip install -e .
+```
 
-The first built-in rules should cover:
+## Usage
 
-- line length
-- trailing whitespace
-- duplicate headings
-- heading jumps
-- missing H1
-- empty links
-- final newline
-
-The line-length rule should use Unicode-aware display width rather than plain `len(...)` so emoji and wide characters are handled correctly.
-
-## Planned usage
-
-```powershell
+```bash
 mdguard README.md
 mdguard docs/
+mdguard README.md docs/
 mdguard . --json
 mdguard . --fix
 ```
 
-## Autofix policy
+Useful options:
 
-`mdguard` should only make conservative fixes by default. Safe early fixes include trimming trailing whitespace and ensuring a final newline. Structural or semantic document changes should be reported, not rewritten, unless the behavior is obvious and well-tested.
+```bash
+mdguard --list-rules
+mdguard docs/ --strict
+mdguard docs/ --max-length 100
+mdguard docs/ --enable missing-h1
+mdguard docs/ --disable line-length
+mdguard docs/ --rules rules.json
+```
 
-See [docs/AUTOFIX_POLICY.md](docs/AUTOFIX_POLICY.md) for the full policy.
+## Built-in rules
+
+Enabled by default:
+
+- `empty-link`
+- `final-newline`
+- `heading-jump`
+- `line-length`
+- `trailing-whitespace`
+
+Available but disabled by default:
+
+- `duplicate-headings`
+- `missing-h1`
+
+Autofix currently handles conservative formatting changes such as trimming
+trailing whitespace and ensuring a final newline. Structural or semantic document
+changes are reported instead of rewritten.
+
+See [docs/RULES.md](docs/RULES.md) for rule behavior and the built-in rule
+contract.
+
+## JSON output
+
+`--json` emits machine-readable results on stdout and keeps human-readable
+status text off stdout.
+
+Current top-level JSON fields:
+
+- `schema_version`
+- `tool`
+- `files`
+- `issue_count`
+
+See [docs/OUTPUT.md](docs/OUTPUT.md) for the output contract.
+
+## Configuration
+
+The current implemented configuration surface is CLI-first:
+
+- `--max-length N`
+- `--strict`
+- `--enable RULE`
+- `--disable RULE`
+- `--rules rules.json`
+
+`pyproject.toml` support is planned but not implemented yet.
+
+See [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 
 ## Documentation
 
@@ -53,9 +100,17 @@ See [docs/AUTOFIX_POLICY.md](docs/AUTOFIX_POLICY.md) for the full policy.
 - [Autofix policy](docs/AUTOFIX_POLICY.md)
 - [Configuration](docs/CONFIGURATION.md)
 - [Development](docs/DEVELOPMENT.md)
+- [Output](docs/OUTPUT.md)
 - [Release checklist](docs/RELEASE_CHECKLIST.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Rules](docs/RULES.md)
+
+## Development
+
+```bash
+python -m pip install -e .
+python -m unittest discover -s tests -v
+```
 
 ## Contributing
 

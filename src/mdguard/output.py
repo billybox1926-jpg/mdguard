@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+from importlib import metadata
 from pathlib import Path
 from typing import TypedDict
 
 from mdguard.core import LintIssue
+
+
+class JsonTool(TypedDict):
+    name: str
+    version: str
 
 
 class JsonIssue(TypedDict):
@@ -20,8 +26,17 @@ class JsonFileReport(TypedDict):
 
 
 class JsonLintReport(TypedDict):
+    schema_version: int
+    tool: JsonTool
     files: list[JsonFileReport]
     issue_count: int
+
+
+def _version() -> str:
+    try:
+        return metadata.version("mdguard")
+    except metadata.PackageNotFoundError:
+        return "0+unknown"
 
 
 def build_json_report(file_issues: list[tuple[Path, list[LintIssue]]]) -> JsonLintReport:
@@ -39,4 +54,9 @@ def build_json_report(file_issues: list[tuple[Path, list[LintIssue]]]) -> JsonLi
             )
         files.append({"path": str(path), "issues": serialized_issues})
         issue_count += len(serialized_issues)
-    return {"files": files, "issue_count": issue_count}
+    return {
+        "schema_version": 1,
+        "tool": {"name": "mdguard", "version": _version()},
+        "files": files,
+        "issue_count": issue_count,
+    }

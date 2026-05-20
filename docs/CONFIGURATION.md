@@ -1,27 +1,81 @@
 # Configuration
 
-## Current state
+## Current configuration surfaces
 
-In foundation mode, configuration is intentionally minimal and may evolve as the package is implemented.
+`mdguard` is currently CLI-first. These options are implemented:
 
-## Planned configuration surfaces
+- `--max-length N` sets the default line-length threshold.
+- `--strict` enables every built-in rule and sets `max_length` to 100.
+- `--enable RULE` enables a rule by ID. It can be repeated.
+- `--disable RULE` disables a rule by ID. It can be repeated.
+- `--rules PATH` loads a JSON rules configuration file.
 
-- CLI flags (primary interface)
-- optional project config file in a later phase
-- per-rule enable/disable controls
-- line-length threshold overrides
+Unknown rule names are rejected with a nonzero exit code and a list of valid rule
+names.
 
-## Proposed config file (future)
+## JSON rules file
 
-A likely future file is `pyproject.toml` under a `[tool.mdguard]` table.
+`--rules` expects a JSON object with a `rules` object.
 
-Example (proposed):
+Example:
+
+```json
+{
+  "rules": {
+    "line-length": { "max": 100 },
+    "trailing-whitespace": true,
+    "duplicate-headings": true,
+    "missing-h1": false
+  }
+}
+```
+
+Rule values can be:
+
+- `true` to enable a rule
+- `false` to disable a rule
+- an object for rule-specific settings, when supported by that rule
+
+The `line-length` rule supports a rule-specific `max` value. If omitted, it uses
+`--max-length` or the default threshold.
+
+## CLI precedence
+
+Configuration is applied in this order:
+
+1. CLI defaults
+2. `--rules` JSON file
+3. `--strict`
+4. repeated `--enable` flags
+5. repeated `--disable` flags
+
+Later entries override earlier entries.
+
+## Exit codes for config errors
+
+Configuration and rule-selection errors exit with code 2. Examples include:
+
+- missing `--rules` file
+- invalid JSON
+- top-level JSON value is not an object
+- `rules` value is not an object
+- unknown rule IDs in JSON, `--enable`, or `--disable`
+
+## Planned project configuration
+
+`pyproject.toml` support is planned for a later phase under a `[tool.mdguard]`
+table. It is not implemented yet.
+
+Proposed example:
 
 ```toml
 [tool.mdguard]
 line_length = 100
 ignore = ["docs/generated/**"]
-enable = ["line-length", "trailing-whitespace"]
+enable = ["duplicate-headings"]
+disable = ["line-length"]
 ```
 
-This is not yet implemented.
+Because mdguard currently supports Python 3.9 and stays dependency-light,
+`pyproject.toml` support needs an explicit compatibility decision before
+implementation.

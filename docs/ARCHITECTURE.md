@@ -2,9 +2,11 @@
 
 ## Overview
 
-`mdguard` is designed as a small `src/`-layout Python package with a clear split between CLI wiring, file discovery, rule execution, output formatting, and optional autofix application.
+`mdguard` is a small `src/`-layout Python package with a clear split between
+CLI wiring, file discovery, rule execution, output formatting, and optional
+autofix application.
 
-## Planned package layout
+## Package layout
 
 ```text
 src/mdguard/
@@ -27,15 +29,23 @@ src/mdguard/
 
 ## Rule model
 
-Each rule should expose a stable identifier, short description, and a check entrypoint that can return zero or more findings. Rules should be deterministic and isolated so they are easy to test.
+Each rule exposes a stable identifier and a check entrypoint that can return zero
+or more findings. Some rules also expose an autofix function or a whole-file
+post-check function.
+
+Rules should be deterministic, isolated, and easy to test. See `docs/RULES.md`
+for the built-in rule contract.
 
 ## Performance principles
 
 - Prefer single-pass scans where practical.
 - Avoid external dependencies in the MVP.
 - Keep file IO predictable and explicit.
+- Do not traverse known noisy directories such as `.git`, virtualenvs,
+  `node_modules`, build outputs, or Python caches.
 
 ## Compatibility target
 
 - Python 3.9+
-- Cross-platform command-line behavior (Linux, macOS, Windows/PowerShell)
+- Cross-platform command-line behavior on Linux, macOS, and Windows
+- Windows-friendly newline handling during autofix
