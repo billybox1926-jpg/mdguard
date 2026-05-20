@@ -11,7 +11,7 @@ pip install -e .
 ## Planned test command
 
 ```bash
-python -m pytest
+python -m unittest discover -s tests -v
 ```
 
 ## Style goals
