@@ -5,10 +5,29 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from json import JSONDecodeError
 from pathlib import Path
 
 from mdguard.core import load_rules, process_file
 from mdguard.discovery import discover_markdown_files
+
+
+def _format_valid_rule_names(rules: dict[str, object]) -> str:
+    return ", ".join(sorted(rules))
+
+
+def _unknown_rule_message(source: str, rule_name: str, rules: dict[str, object]) -> str:
+    return (
+        f"Unknown rule '{rule_name}' in {source}. "
+        f"Valid rule names: {_format_valid_rule_names(rules)}"
+    )
+
+
+def _validate_rule_names(selected_rules: list[str], source: str, rules: dict[str, object]) -> str | None:
+    for name in selected_rules:
+        if name not in rules:
+            return _unknown_rule_message(source, name, rules)
+    return None
 
 
 def main() -> int:
@@ -37,11 +56,25 @@ def main() -> int:
 
     config: dict[str, object] = {"max_length": args.max_length}
     if args.rules:
-        rules_config = json.loads(args.rules.read_text(encoding="utf-8"))
+        try:
+            rules_config = json.loads(args.rules.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            print(f"rules config file not found: {args.rules}", file=sys.stderr)
+            return 2
+        except JSONDecodeError as exc:
+            print(f"invalid JSON in rules config {args.rules}: {exc.msg}", file=sys.stderr)
+            return 2
+
         configured_rules = rules_config.get("rules", {})
         if not isinstance(configured_rules, dict):
             print("rules config must contain an object at 'rules'", file=sys.stderr)
             return 2
+
+        unknown_from_config = _validate_rule_names(list(configured_rules), f"--rules {args.rules}", rules)
+        if unknown_from_config:
+            print(unknown_from_config, file=sys.stderr)
+            return 2
+
         config.update(configured_rules)
 
     if args.strict:
@@ -49,6 +82,16 @@ def main() -> int:
         for name in rules:
             if name not in args.disable:
                 config[name] = True
+
+    unknown_enabled = _validate_rule_names(args.enable, "--enable", rules)
+    if unknown_enabled:
+        print(unknown_enabled, file=sys.stderr)
+        return 2
+
+    unknown_disabled = _validate_rule_names(args.disable, "--disable", rules)
+    if unknown_disabled:
+        print(unknown_disabled, file=sys.stderr)
+        return 2
 
     for name in args.enable:
         config[name] = True
