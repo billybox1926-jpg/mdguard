@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from mdguard.core import load_rules, process_file
+from mdguard.discovery import discover_markdown_files
 
 
 def main() -> int:
@@ -54,20 +55,31 @@ def main() -> int:
     for name in args.disable:
         config[name] = False
 
-    unfixed_issues_global = []
-    for f in args.files:
-        p = Path(f)
-        if not p.is_file():
-            print(f"{p} not found", file=sys.stderr)
-            continue
+    markdown_files, missing_targets, empty_directories = discover_markdown_files(args.files)
 
-        issues = process_file(p, rules, config, fix=args.fix)
+    if missing_targets:
+        for target in missing_targets:
+            print(f"{target} not found", file=sys.stderr)
+        return 1
+
+    if empty_directories:
+        for directory in empty_directories:
+            print(f"No Markdown files found under directory: {directory}", file=sys.stderr)
+        return 1
+
+    if not markdown_files:
+        print("No Markdown files found in provided targets.", file=sys.stderr)
+        return 1
+
+    unfixed_issues_global = []
+    for path in markdown_files:
+        issues = process_file(path, rules, config, fix=args.fix)
         if issues:
             if args.fix:
                 unfixed_issues = [iss for iss in issues if not rules.get(iss.rule, {}).get("fix")]
                 fixed_count = len(issues) - len(unfixed_issues)
                 if fixed_count:
-                    print(f"🔧 Fixed {fixed_count} auto-fixable issue(s) in {p}.", file=sys.stderr)
+                    print(f"🔧 Fixed {fixed_count} auto-fixable issue(s) in {path}.", file=sys.stderr)
                 if unfixed_issues:
                     for issue in unfixed_issues:
                         print(issue, file=sys.stderr)
@@ -81,7 +93,7 @@ def main() -> int:
                 print(f"⚠️  {n} issue{'s' if n != 1 else ''} found.", file=sys.stderr)
                 unfixed_issues_global.extend(issues)
         else:
-            print(f"✅ No issues found in {p}.", file=sys.stderr)
+            print(f"✅ No issues found in {path}.", file=sys.stderr)
 
     return 1 if unfixed_issues_global else 0
 
