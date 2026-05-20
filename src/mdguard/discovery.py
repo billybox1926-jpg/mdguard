@@ -5,6 +5,24 @@ from __future__ import annotations
 from pathlib import Path
 
 _MARKDOWN_EXTENSIONS = {".md", ".markdown"}
+_IGNORED_DIRECTORIES = {
+    ".git",
+    ".hg",
+    ".svn",
+    "__pycache__",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".nox",
+    ".venv",
+    "venv",
+    "env",
+    "node_modules",
+    "build",
+    "dist",
+    ".eggs",
+}
 
 
 def discover_markdown_files(targets: list[str]) -> tuple[list[Path], list[Path], list[Path]]:
@@ -29,7 +47,11 @@ def discover_markdown_files(targets: list[str]) -> tuple[list[Path], list[Path],
 
         if target.is_dir():
             found = sorted(
-                p for p in target.rglob("*") if p.is_file() and p.suffix.lower() in _MARKDOWN_EXTENSIONS
+                p
+                for p in target.rglob("*")
+                if p.is_file()
+                and p.suffix.lower() in _MARKDOWN_EXTENSIONS
+                and not any(parent.name in _IGNORED_DIRECTORIES for parent in p.parents)
             )
             if found:
                 markdown_files.extend(found)
