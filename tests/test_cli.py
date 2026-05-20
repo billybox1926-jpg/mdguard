@@ -79,6 +79,21 @@ class TestCli(unittest.TestCase):
             self.assertNotEqual(proc.returncode, 0)
             self.assertIn("No Markdown files found under directory", proc.stderr)
 
+
+    def test_final_newline_fix_preserves_crlf_style(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "windows-no-final-newline.md"
+            p.write_bytes(b"# title\r\nbody")
+
+            fix_proc = subprocess.run(
+                [sys.executable, "-m", "mdguard.cli", str(p), "--fix"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(fix_proc.returncode, 0)
+            self.assertEqual(p.read_bytes(), b"# title\r\nbody\r\n")
+
     def test_final_newline_detect_and_fix(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "no-final-newline.md"

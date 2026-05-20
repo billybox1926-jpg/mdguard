@@ -24,8 +24,22 @@ def check(
     return []
 
 
-def fix(line: str) -> str:
-    """Add exactly one final newline when it is missing."""
+def fix(line: str, ctx: dict | None = None) -> str:
+    """Add exactly one final newline when it is missing, preserving style."""
     if line.endswith(("\n", "\r")):
         return line
-    return line + "\n"
+
+    newline = "\n"
+    if ctx is not None:
+        for existing_line in ctx.get("lines", []):
+            if existing_line.endswith("\r\n"):
+                newline = "\r\n"
+                break
+            if existing_line.endswith("\n"):
+                newline = "\n"
+                break
+            if existing_line.endswith("\r"):
+                newline = "\r"
+                break
+
+    return line + newline
