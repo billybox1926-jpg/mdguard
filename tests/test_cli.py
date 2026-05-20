@@ -80,6 +80,36 @@ class TestCli(unittest.TestCase):
             self.assertNotEqual(proc.returncode, 0)
             self.assertIn("No Markdown files found under directory", proc.stderr)
 
+    def test_exclude_option_skips_matching_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            docs = root / "docs"
+            generated = docs / "generated"
+            generated.mkdir(parents=True)
+            keep = docs / "keep.md"
+            skipped = generated / "api.md"
+            keep.write_text("# keep\n", encoding="utf-8")
+            skipped.write_text("This generated line is intentionally far too long for the default line length limit and should not be linted when excluded.\n", encoding="utf-8")
+
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "mdguard.cli",
+                    str(root),
+                    "--exclude",
+                    "docs/generated/**",
+                    "--json",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(proc.returncode, 0)
+            report = json.loads(proc.stdout)
+            self.assertEqual(report["issue_count"], 0)
+            self.assertEqual([Path(f["path"]).name for f in report["files"]], ["keep.md"])
+
 
     def test_final_newline_fix_preserves_crlf_style(self):
         with tempfile.TemporaryDirectory() as tmp:

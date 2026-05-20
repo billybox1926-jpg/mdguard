@@ -41,6 +41,12 @@ def main() -> int:
     parser.add_argument("--disable", action="append", default=[], help="Disable specific rules (can be used multiple times)")
     parser.add_argument("--enable", action="append", default=[], help="Enable specific rules (can be used multiple times)")
     parser.add_argument("--rules", type=Path, help="JSON config file with a rules object for enabling/disabling rules")
+    parser.add_argument(
+        "--exclude",
+        action="append",
+        default=[],
+        help="Exclude files or directories using slash-separated glob patterns (can be used multiple times)",
+    )
     parser.add_argument("--json", action="store_true", dest="json_output", help="Emit lint results as JSON")
     args = parser.parse_args()
 
@@ -104,7 +110,10 @@ def main() -> int:
     for name in args.disable:
         config[name] = False
 
-    markdown_files, missing_targets, empty_directories = discover_markdown_files(args.files)
+    markdown_files, missing_targets, empty_directories = discover_markdown_files(
+        args.files,
+        exclude_patterns=args.exclude,
+    )
 
     if missing_targets:
         for target in missing_targets:
