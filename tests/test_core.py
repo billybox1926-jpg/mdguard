@@ -7,6 +7,11 @@ from unittest.mock import patch
 from mdguard.core import load_rules, process_file
 
 
+def write_fixture(path: Path, text: str, encoding: str) -> None:
+    with path.open("w", encoding=encoding, newline="") as handle:
+        handle.write(text)
+
+
 class TestCore(unittest.TestCase):
     def test_load_rules_includes_line_length(self):
         rules = load_rules()
@@ -32,9 +37,7 @@ class TestCore(unittest.TestCase):
                 issues = process_file(path, rules, config, fix=True)
 
             self.assertTrue(any(issue.rule == "trailing-whitespace" for issue in issues))
-            write_calls = [
-                (args, kwargs) for args, kwargs in calls if args and args[0] == "w"
-            ]
+            write_calls = [(args, kwargs) for args, kwargs in calls if args and args[0] == "w"]
             self.assertEqual(len(write_calls), 1)
             self.assertEqual(write_calls[0][1].get("newline"), "")
             self.assertEqual(path.read_bytes(), b"x\n")
@@ -43,46 +46,45 @@ class TestCore(unittest.TestCase):
         rules = load_rules()
         with TemporaryDirectory() as tmp:
             path = Path(tmp) / "utf8.md"
-            path.write_text("x  \n", encoding="utf-8", newline="")
+            write_fixture(path, "x  \n", "utf-8")
             config = {name: False for name in rules}
             config["trailing-whitespace"] = True
 
             process_file(path, rules, config, fix=True)
-            with path.open("r", encoding="utf-8", newline="") as f:
-                self.assertEqual(f.read(), "x\n")
+            with path.open("r", encoding="utf-8", newline="") as handle:
+                self.assertEqual(handle.read(), "x\n")
 
     def test_utf16_autofix_preserves_utf16_encoding(self):
         rules = load_rules()
         with TemporaryDirectory() as tmp:
             path = Path(tmp) / "utf16.md"
-            path.write_text("x  \n", encoding="utf-16", newline="")
+            write_fixture(path, "x  \n", "utf-16")
             config = {name: False for name in rules}
             config["trailing-whitespace"] = True
 
             process_file(path, rules, config, fix=True)
 
-            raw = path.read_bytes()
-            self.assertTrue(raw.startswith((b"\xff\xfe", b"\xfe\xff")))
-            with path.open("r", encoding="utf-16", newline="") as f:
-                self.assertEqual(f.read(), "x\n")
+            self.assertIn(path.read_bytes()[:2], (bytes([255, 254]), bytes([254, 255])))
+            with path.open("r", encoding="utf-16", newline="") as handle:
+                self.assertEqual(handle.read(), "x\n")
 
     def test_utf16_autofix_preserves_newline_bytes(self):
         rules = load_rules()
         with TemporaryDirectory() as tmp:
             path = Path(tmp) / "utf16-crlf.md"
-            path.write_text("x  \r\n", encoding="utf-16", newline="")
+            write_fixture(path, "x  \r\n", "utf-16")
             config = {name: False for name in rules}
             config["trailing-whitespace"] = True
 
             process_file(path, rules, config, fix=True)
-            with path.open("r", encoding="utf-16", newline="") as f:
-                self.assertEqual(f.read(), "x\r\n")
+            with path.open("r", encoding="utf-16", newline="") as handle:
+                self.assertEqual(handle.read(), "x\r\n")
 
     def test_unsupported_encoding_skips_fix_with_message(self):
         rules = load_rules()
         with TemporaryDirectory() as tmp:
             path = Path(tmp) / "x.md"
-            path.write_text("x  \n", encoding="utf-8", newline="")
+            write_fixture(path, "x  \n", "utf-8")
             config = {name: False for name in rules}
             config["trailing-whitespace"] = True
 
@@ -91,8 +93,8 @@ class TestCore(unittest.TestCase):
                 with patch("sys.stderr", new=stderr):
                     process_file(path, rules, config, fix=True)
 
-            with path.open("r", encoding="utf-8", newline="") as f:
-                self.assertEqual(f.read(), "x  \n")
+            with path.open("r", encoding="utf-8", newline="") as handle:
+                self.assertEqual(handle.read(), "x  \n")
             self.assertIn("Skipping autofix", stderr.getvalue())
 
     def test_trailing_whitespace_fix_preserves_crlf(self):
