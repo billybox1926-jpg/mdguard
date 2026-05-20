@@ -9,9 +9,33 @@
 - `--enable RULE` enables a rule by ID. It can be repeated.
 - `--disable RULE` disables a rule by ID. It can be repeated.
 - `--rules PATH` loads a JSON rules configuration file.
+- `--exclude PATTERN` excludes matching Markdown files or directories during
+  discovery. It can be repeated.
 
 Unknown rule names are rejected with a nonzero exit code and a list of valid rule
 names.
+
+## Exclude patterns
+
+Use repeated `--exclude` flags to skip project-specific generated, vendored, or
+otherwise noisy Markdown paths:
+
+```bash
+mdguard . --exclude "docs/generated/**" --exclude "vendor"
+```
+
+Patterns are slash-separated globs matched against paths relative to each
+directory target. Backslashes in patterns are normalized to slashes so the same
+pattern style works on Windows and POSIX shells.
+
+Useful forms:
+
+- `docs/generated/**` excludes all Markdown files under `docs/generated/`.
+- `vendor` excludes a directory named `vendor` below the target.
+- `README.md` excludes a direct file target named `README.md`.
+
+For now, exclude patterns are CLI-only. Project-level excludes will move into
+`pyproject.toml` when project configuration is implemented.
 
 ## JSON rules file
 

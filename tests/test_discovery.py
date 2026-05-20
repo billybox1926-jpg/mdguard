@@ -85,6 +85,41 @@ class TestDiscovery(unittest.TestCase):
             self.assertEqual(empty, [])
             self.assertEqual(files, [direct, nested])
 
+    def test_exclude_patterns_skip_nested_files_and_directories(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            docs = root / "docs"
+            generated = docs / "generated"
+            generated.mkdir(parents=True)
+            keep = docs / "keep.md"
+            excluded_file = docs / "draft.md"
+            excluded_nested = generated / "api.md"
+            keep.write_text("# keep\n", encoding="utf-8")
+            excluded_file.write_text("# draft\n", encoding="utf-8")
+            excluded_nested.write_text("# api\n", encoding="utf-8")
+
+            files, missing, empty = discover_markdown_files(
+                [str(root)],
+                exclude_patterns=["docs/draft.md", "docs/generated/**"],
+            )
+            self.assertEqual(missing, [])
+            self.assertEqual(empty, [])
+            self.assertEqual(files, [keep])
+
+    def test_exclude_patterns_apply_to_direct_file_targets(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            direct = root / "README.md"
+            direct.write_text("# readme\n", encoding="utf-8")
+
+            files, missing, empty = discover_markdown_files(
+                [str(direct)],
+                exclude_patterns=["README.md"],
+            )
+            self.assertEqual(missing, [])
+            self.assertEqual(empty, [])
+            self.assertEqual(files, [])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -41,6 +41,7 @@ mdguard docs/ --strict
 mdguard docs/ --max-length 100
 mdguard docs/ --enable missing-h1
 mdguard docs/ --disable line-length
+mdguard docs/ --exclude "docs/generated/**"
 mdguard docs/ --rules rules.json
 ```
 
@@ -88,6 +89,7 @@ The current implemented configuration surface is CLI-first:
 - `--strict`
 - `--enable RULE`
 - `--disable RULE`
+- `--exclude PATTERN`
 - `--rules rules.json`
 
 `pyproject.toml` support is planned but not implemented yet.
