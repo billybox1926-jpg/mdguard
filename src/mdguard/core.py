@@ -53,15 +53,17 @@ def read_file_text(path: Path) -> tuple[str | None, str | None]:
 
 def load_rules() -> dict[str, Any]:
     """Load built-in rules from the package rule namespace."""
-    rules: dict[str, Any] = {}
-    for module_name in (
+    builtins = (
         "duplicate_headings",
         "empty_link",
         "heading_jump",
         "line_length",
         "missing_h1",
         "trailing_whitespace",
-    ):
+    )
+    rules: dict[str, Any] = {}
+    import_errors: list[str] = []
+    for module_name in builtins:
         fqmn = f"mdguard.rules.{module_name}"
         try:
             module = importlib.import_module(fqmn)
@@ -72,8 +74,17 @@ def load_rules() -> dict[str, Any]:
                     "fix": getattr(module, "fix", None),
                     "post_check": getattr(module, "post_check", None),
                 }
+            else:
+                import_errors.append(f"{fqmn} missing NAME/check")
         except Exception as exc:
-            print(f"Failed to load rule {fqmn}: {exc}", file=sys.stderr)
+            import_errors.append(f"{fqmn}: {exc}")
+
+    if import_errors:
+        details = "; ".join(import_errors)
+        raise RuntimeError(f"Failed to load built-in rule(s): {details}")
+
+    if "line-length" not in rules:
+        raise RuntimeError("Failed to load built-in rule: line-length")
     return rules
 
 

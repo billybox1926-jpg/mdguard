@@ -1,5 +1,7 @@
 """Markdown lint rule for line length."""
 
+from __future__ import annotations
+
 from mdguard.core import LintIssue, display_width
 
 NAME = "line-length"
