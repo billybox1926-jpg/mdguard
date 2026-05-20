@@ -1,3 +1,4 @@
+import io
 import unittest
 from tempfile import TemporaryDirectory
 from pathlib import Path
@@ -38,6 +39,61 @@ class TestCore(unittest.TestCase):
             self.assertEqual(write_calls[0][1].get("newline"), "")
             self.assertEqual(path.read_bytes(), b"x\n")
 
+    def test_utf8_autofix_still_writes_utf8(self):
+        rules = load_rules()
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "utf8.md"
+            path.write_text("x  \n", encoding="utf-8", newline="")
+            config = {name: False for name in rules}
+            config["trailing-whitespace"] = True
+
+            process_file(path, rules, config, fix=True)
+            with path.open("r", encoding="utf-8", newline="") as f:
+                self.assertEqual(f.read(), "x\n")
+
+    def test_utf16_autofix_preserves_utf16_encoding(self):
+        rules = load_rules()
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "utf16.md"
+            path.write_text("x  \n", encoding="utf-16", newline="")
+            config = {name: False for name in rules}
+            config["trailing-whitespace"] = True
+
+            process_file(path, rules, config, fix=True)
+
+            raw = path.read_bytes()
+            self.assertTrue(raw.startswith((b"\xff\xfe", b"\xfe\xff")))
+            with path.open("r", encoding="utf-16", newline="") as f:
+                self.assertEqual(f.read(), "x\n")
+
+    def test_utf16_autofix_preserves_newline_bytes(self):
+        rules = load_rules()
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "utf16-crlf.md"
+            path.write_text("x  \r\n", encoding="utf-16", newline="")
+            config = {name: False for name in rules}
+            config["trailing-whitespace"] = True
+
+            process_file(path, rules, config, fix=True)
+            with path.open("r", encoding="utf-16", newline="") as f:
+                self.assertEqual(f.read(), "x\r\n")
+
+    def test_unsupported_encoding_skips_fix_with_message(self):
+        rules = load_rules()
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "x.md"
+            path.write_text("x  \n", encoding="utf-8", newline="")
+            config = {name: False for name in rules}
+            config["trailing-whitespace"] = True
+
+            with patch("mdguard.core.read_file_text", return_value=("x  \n", "latin-1")):
+                stderr = io.StringIO()
+                with patch("sys.stderr", new=stderr):
+                    process_file(path, rules, config, fix=True)
+
+            with path.open("r", encoding="utf-8", newline="") as f:
+                self.assertEqual(f.read(), "x  \n")
+            self.assertIn("Skipping autofix", stderr.getvalue())
 
     def test_trailing_whitespace_fix_preserves_crlf(self):
         rules = load_rules()
