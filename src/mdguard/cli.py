@@ -65,6 +65,10 @@ def main() -> int:
             print(f"invalid JSON in rules config {args.rules}: {exc.msg}", file=sys.stderr)
             return 2
 
+        if not isinstance(rules_config, dict):
+            print("rules config must contain a JSON object", file=sys.stderr)
+            return 2
+
         configured_rules = rules_config.get("rules", {})
         if not isinstance(configured_rules, dict):
             print("rules config must contain an object at 'rules'", file=sys.stderr)

@@ -147,6 +147,22 @@ class TestCli(unittest.TestCase):
             self.assertEqual(proc.returncode, 2)
             self.assertIn("invalid JSON in rules config", proc.stderr)
 
+
+    def test_rules_config_requires_top_level_object(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "README.md"
+            target.write_text("# title\n", encoding="utf-8")
+            cfg = Path(tmp) / "rules.json"
+            cfg.write_text("[]", encoding="utf-8")
+            proc = subprocess.run(
+                [sys.executable, "-m", "mdguard.cli", str(target), "--rules", str(cfg)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(proc.returncode, 2)
+            self.assertIn("rules config must contain a JSON object", proc.stderr)
+
     def test_rules_config_requires_object_shape(self):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "README.md"
