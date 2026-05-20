@@ -161,9 +161,14 @@ def process_file(path: Path, rules: dict[str, Any], config: dict[str, Any], fix:
             issues.extend(rule["post_check"](path, ctx, config))
 
     if fix and fixed_lines != lines:
-        with path.open("w", encoding="utf-8", newline="") as f:
+        if original_encoding not in {"utf-8", "utf-16"}:
+            print(
+                f"⚠️ Skipping autofix for {path}: unsupported write encoding {original_encoding!r}.",
+                file=sys.stderr,
+            )
+            return issues
+
+        with path.open("w", encoding=original_encoding, newline="") as f:
             f.write("".join(fixed_lines))
-        if original_encoding != "utf-8":
-            print(f"💡 Converted {path} from {original_encoding.upper()} to UTF-8.", file=sys.stderr)
 
     return issues
