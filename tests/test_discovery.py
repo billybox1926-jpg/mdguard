@@ -56,6 +56,20 @@ class TestDiscovery(unittest.TestCase):
             self.assertEqual(empty, [])
             self.assertEqual(files, [a, b])
 
+    def test_parent_path_named_ignored_directory_does_not_hide_repo_files(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            project = root / "env" / "project"
+            docs = project / "docs"
+            docs.mkdir(parents=True)
+            markdown = docs / "a.md"
+            markdown.write_text("# a\n", encoding="utf-8")
+
+            files, missing, empty = discover_markdown_files([str(project)])
+            self.assertEqual(missing, [])
+            self.assertEqual(empty, [])
+            self.assertEqual(files, [markdown])
+
     def test_mixed_targets_include_direct_file(self):
         with TemporaryDirectory() as tmp:
             root = Path(tmp)

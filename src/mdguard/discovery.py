@@ -51,7 +51,7 @@ def discover_markdown_files(targets: list[str]) -> tuple[list[Path], list[Path],
                 for p in target.rglob("*")
                 if p.is_file()
                 and p.suffix.lower() in _MARKDOWN_EXTENSIONS
-                and not any(parent.name in _IGNORED_DIRECTORIES for parent in p.parents)
+                and not any(part in _IGNORED_DIRECTORIES for part in p.relative_to(target).parts[:-1])
             )
             if found:
                 markdown_files.extend(found)
