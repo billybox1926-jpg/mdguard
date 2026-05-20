@@ -12,7 +12,8 @@ class TestRules(unittest.TestCase):
     def _lint(self, text: str, config: dict, fix: bool = False):
         with TemporaryDirectory() as tmp:
             path = Path(tmp) / "doc.md"
-            path.write_text(text, encoding="utf-8", newline="")
+            with path.open("w", encoding="utf-8", newline="") as handle:
+                handle.write(text)
             issues = process_file(path, self.rules, config, fix=fix)
             with path.open("r", encoding="utf-8", newline="") as handle:
                 return issues, handle.read()
