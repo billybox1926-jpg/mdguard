@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import tempfile
+import json
 import unittest
 from pathlib import Path
 
@@ -233,6 +234,69 @@ class TestCli(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(proc.returncode, 0)
+
+    def test_json_output_with_findings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "README.md"
+            p.write_text("# title\nline with trailing spaces  \n", encoding="utf-8")
+            proc = subprocess.run(
+                [sys.executable, "-m", "mdguard.cli", str(p), "--json"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(proc.returncode, 1)
+            report = json.loads(proc.stdout)
+            self.assertEqual(report["issue_count"], 1)
+            self.assertEqual(report["files"][0]["path"], str(p))
+            self.assertEqual(report["files"][0]["issues"][0]["rule"], "trailing-whitespace")
+
+    def test_json_output_with_clean_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "README.md"
+            p.write_text("# title\n", encoding="utf-8")
+            proc = subprocess.run(
+                [sys.executable, "-m", "mdguard.cli", str(p), "--json"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(proc.returncode, 0)
+            report = json.loads(proc.stdout)
+            self.assertEqual(report["issue_count"], 0)
+            self.assertEqual(report["files"][0]["path"], str(p))
+            self.assertEqual(report["files"][0]["issues"], [])
+
+    def test_json_output_parseable_and_no_human_text(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "README.md"
+            p.write_text("bad  \n", encoding="utf-8")
+            proc = subprocess.run(
+                [sys.executable, "-m", "mdguard.cli", str(p), "--json"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            json.loads(proc.stdout)
+            self.assertNotIn("✅", proc.stdout)
+            self.assertNotIn("⚠️", proc.stdout)
+            self.assertNotIn("No issues found", proc.stdout)
+
+    def test_fix_json_reports_only_remaining_unfixed_issues(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "README.md"
+            p.write_text("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  \n", encoding="utf-8")
+            proc = subprocess.run(
+                [sys.executable, "-m", "mdguard.cli", str(p), "--fix", "--json"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(proc.returncode, 1)
+            report = json.loads(proc.stdout)
+            self.assertEqual(report["issue_count"], 1)
+            self.assertEqual(report["files"][0]["issues"][0]["rule"], "line-length")
+            self.assertTrue(p.read_text(encoding="utf-8").endswith("\n"))
 
 
 if __name__ == "__main__":

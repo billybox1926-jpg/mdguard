@@ -10,6 +10,7 @@ from pathlib import Path
 
 from mdguard.core import load_rules, process_file
 from mdguard.discovery import discover_markdown_files
+from mdguard.output import build_json_report
 
 
 def _format_valid_rule_names(rules: dict[str, object]) -> str:
@@ -40,6 +41,7 @@ def main() -> int:
     parser.add_argument("--disable", action="append", default=[], help="Disable specific rules (can be used multiple times)")
     parser.add_argument("--enable", action="append", default=[], help="Enable specific rules (can be used multiple times)")
     parser.add_argument("--rules", type=Path, help="JSON config file with a rules object for enabling/disabling rules")
+    parser.add_argument("--json", action="store_true", dest="json_output", help="Emit lint results as JSON")
     args = parser.parse_args()
 
     rules = load_rules()
@@ -119,28 +121,40 @@ def main() -> int:
         return 1
 
     unfixed_issues_global = []
+    json_file_issues = []
     for path in markdown_files:
         issues = process_file(path, rules, config, fix=args.fix)
         if issues:
             if args.fix:
                 unfixed_issues = [iss for iss in issues if not rules.get(iss.rule, {}).get("fix")]
                 fixed_count = len(issues) - len(unfixed_issues)
-                if fixed_count:
+                if fixed_count and not args.json_output:
                     print(f"🔧 Fixed {fixed_count} auto-fixable issue(s) in {path}.", file=sys.stderr)
                 if unfixed_issues:
-                    for issue in unfixed_issues:
-                        print(issue, file=sys.stderr)
+                    if not args.json_output:
+                        for issue in unfixed_issues:
+                            print(issue, file=sys.stderr)
                     n = len(unfixed_issues)
-                    print(f"⚠️  {n} issue{'s' if n != 1 else ''} remaining (not auto-fixable).", file=sys.stderr)
+                    if not args.json_output:
+                        print(f"⚠️  {n} issue{'s' if n != 1 else ''} remaining (not auto-fixable).", file=sys.stderr)
                 unfixed_issues_global.extend(unfixed_issues)
+                json_file_issues.append((path, unfixed_issues))
             else:
-                for issue in issues:
-                    print(issue, file=sys.stderr)
+                if not args.json_output:
+                    for issue in issues:
+                        print(issue, file=sys.stderr)
                 n = len(issues)
-                print(f"⚠️  {n} issue{'s' if n != 1 else ''} found.", file=sys.stderr)
+                if not args.json_output:
+                    print(f"⚠️  {n} issue{'s' if n != 1 else ''} found.", file=sys.stderr)
                 unfixed_issues_global.extend(issues)
+                json_file_issues.append((path, issues))
         else:
-            print(f"✅ No issues found in {path}.", file=sys.stderr)
+            if not args.json_output:
+                print(f"✅ No issues found in {path}.", file=sys.stderr)
+            json_file_issues.append((path, []))
+
+    if args.json_output:
+        print(json.dumps(build_json_report(json_file_issues)))
 
     return 1 if unfixed_issues_global else 0
 
