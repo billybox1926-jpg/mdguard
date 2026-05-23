@@ -9,7 +9,7 @@ import sys
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Tuple
 
 
 @dataclass
@@ -18,6 +18,7 @@ class LintIssue:
     line: int
     rule: str
     message: str
+    fixed: bool = False
 
     def __str__(self) -> str:
         return f"{self.file}:{self.line}: {self.message} [{self.rule}]"
@@ -38,7 +39,7 @@ def display_width(text: str) -> int:
     return width
 
 
-def read_file_text(path: Path) -> tuple[str | None, str | None]:
+def read_file_text(path: Path) -> Tuple[Optional[str], Optional[str]]:
     """Read file text as UTF-8(-sig) then UTF-16 fallback without newline conversion."""
     try:
         with path.open("r", encoding="utf-8-sig", newline="") as f:
@@ -65,6 +66,7 @@ def load_rules() -> dict[str, Any]:
         "missing_h1",
         "trailing_whitespace",
         "final_newline",
+        "internal_anchor",
     )
     rules: dict[str, Any] = {}
     import_errors: list[str] = []
@@ -79,6 +81,10 @@ def load_rules() -> dict[str, Any]:
                     "fix": getattr(module, "fix", None),
                     "post_check": getattr(module, "post_check", None),
                     "allow_add_line_ending": getattr(module, "ALLOW_ADD_LINE_ENDING", False),
+                    "description": getattr(module, "DESCRIPTION", ""),
+                    "tags": getattr(module, "TAGS", ()),
+                    "aliases": getattr(module, "ALIASES", ()),
+                    "fixable": hasattr(module, "fix"),
                 }
             else:
                 import_errors.append(f"{fqmn} missing NAME/check")
@@ -135,17 +141,53 @@ def process_file(path: Path, rules: dict[str, Any], config: dict[str, Any], fix:
         "seen_headings": {},
         "has_h1": False,
         "in_code_block": False,
+        "in_front_matter": False,
+        "front_matter_done": False,
+        "headings": [],
         "lines": fixed_lines,
     }
 
     for i, _ in enumerate(lines, 1):
         stripped = fixed_lines[i - 1].rstrip("\n\r")
-        
+        if i == 1 and stripped in {"---", "+++"}:
+            ctx["in_front_matter"] = stripped
+        elif ctx.get("in_front_matter") and stripped == ctx["in_front_matter"]:
+            ctx["in_front_matter"] = False
+            ctx["front_matter_done"] = True
+
         is_fence = bool(_CODE_FENCE_RE.match(stripped))
         if is_fence:
             ctx["in_code_block"] = not ctx["in_code_block"]
 
+        suppressed_all = bool(ctx.get("suppressed_all"))
+        disabled_specific = set(ctx.get("suppressed_rules", set()))
+        next_specific = set(ctx.pop("suppress_next_rules", set()))
+        if "mdguard-enable" in stripped:
+            ctx["suppressed_all"] = False
+            ctx["suppressed_rules"] = set()
+            suppressed_all = False
+            disabled_specific = set()
+        if "mdguard-disable" in stripped and "next-line" not in stripped and "disable-line" not in stripped:
+            tokens = stripped.replace("-->", "").split()
+            rules_to_disable = [t for t in tokens if t not in {"<!--", "mdguard-disable"}]
+            if rules_to_disable:
+                ctx.setdefault("suppressed_rules", set()).update(rules_to_disable)
+            else:
+                ctx["suppressed_all"] = True
+        same_line_rules: set[str] = set()
+        if "mdguard-disable-line" in stripped:
+            tokens = stripped.replace("-->", "").split()
+            same_line_rules = {t for t in tokens if t not in {"<!--", "mdguard-disable-line"}}
+            if not same_line_rules:
+                suppressed_all = True
+        if "mdguard-disable-next-line" in stripped:
+            tokens = stripped.replace("-->", "").split()
+            rules_next = {t for t in tokens if t not in {"<!--", "mdguard-disable-next-line"}}
+            ctx["suppress_next_rules"] = rules_next or {"*"}
+
         for rule_name, rule in rules.items():
+            if suppressed_all or "*" in next_specific or rule_name in disabled_specific or rule_name in next_specific or rule_name in same_line_rules:
+                continue
             if config.get(rule_name, rule["default_enabled"]):
                 new_issues = rule["check"](path, stripped, i, ctx, config)
                 issues.extend(new_issues)

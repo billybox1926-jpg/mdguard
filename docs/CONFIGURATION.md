@@ -49,8 +49,9 @@ Useful forms:
 - `vendor` excludes a directory named `vendor` below the target.
 - `README.md` excludes a direct file target named `README.md`.
 
-For now, exclude patterns are CLI-only. Project-level excludes will move into
-`pyproject.toml` when project configuration is implemented.
+Project-level excludes can also be configured in `[tool.mdguard]` using the
+`exclude` array. CLI `--exclude` flags are applied after discovered project
+configuration and therefore take precedence.
 
 ## JSON rules file
 
@@ -100,21 +101,27 @@ Configuration and rule-selection errors exit with code 2. Examples include:
 - `rules` value is not an object
 - unknown rule IDs in JSON, `--enable`, or `--disable`
 
-## Planned project configuration
+## Project configuration
 
-`pyproject.toml` support is planned for a later phase under a `[tool.mdguard]`
-table. It is not implemented yet.
+`pyproject.toml` is discovered by walking upward from the current working
+directory and using the nearest `[tool.mdguard]` table. CLI flags override
+discovered project configuration.
 
-Proposed example:
+Example:
 
 ```toml
 [tool.mdguard]
-line_length = 100
-ignore = ["docs/generated/**"]
+max_length = 100
+exclude = ["docs/generated/**"]
 enable = ["duplicate-headings"]
 disable = ["line-length"]
 ```
 
-Because mdguard currently supports Python 3.9 and stays dependency-light,
-`pyproject.toml` support needs an explicit compatibility decision before
-implementation.
+On Python 3.11+ mdguard uses the standard-library `tomllib` parser. On older
+runtimes it supports the simple `[tool.mdguard]` keys shown above without adding
+a runtime dependency.
+
+## Baselines
+
+Use `--write-baseline FILE` to capture current issues, then `--baseline FILE` to
+suppress only those exact issue fingerprints during incremental adoption.

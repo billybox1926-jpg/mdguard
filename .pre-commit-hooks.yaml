@@ -1,0 +1,6 @@
+- id: mdguard
+  name: mdguard
+  description: Dependency-light Markdown lint guardrails
+  entry: mdguard
+  language: python
+  types: [markdown]

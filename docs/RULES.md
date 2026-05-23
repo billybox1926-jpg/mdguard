@@ -9,7 +9,8 @@ Enabled by default:
 | `empty-link` | Reports inline links with empty destinations. | No |
 | `final-newline` | Reports files that do not end with a newline. | Yes |
 | `heading-jump` | Reports heading levels that skip more than one level. | No |
-| `line-length` | Reports lines that exceed the configured display width. | No |
+| `internal-anchor` | Reports same-file links to missing heading anchors. | No |
+| `line-length` | Reports lines that exceed the configured display width, with URL/table/reference exceptions. | No |
 | `trailing-whitespace` | Reports trailing spaces or tabs. | Yes |
 
 Available but disabled by default:
@@ -103,3 +104,26 @@ Enable it explicitly or use `--strict`.
 
 Disabled by default because fragments, includes, and generated docs often omit a
 single document-level H1. Enable it for standalone document checks.
+
+
+## Rule metadata
+
+Built-in rules expose description, tags, aliases, and fixability metadata. Use
+`mdguard --list-rules --verbose` to inspect this information for generated docs,
+editor integrations, and compatibility mapping.
+
+## Inline suppressions
+
+Markdown comments can suppress rules in narrow scopes:
+
+- `<!-- mdguard-disable-next-line rule-id -->`
+- `<!-- mdguard-disable-line rule-id -->`
+- `<!-- mdguard-disable rule-id -->` followed later by `<!-- mdguard-enable -->`
+
+Omitting the rule ID suppresses all rules for that scope.
+
+## Markdown-aware parsing
+
+Rules skip fenced code blocks where appropriate. Front matter delimited by `---`
+or `+++` at the start of a file is tracked so Markdown rules do not lint metadata
+as prose.

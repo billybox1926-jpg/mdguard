@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fnmatch import fnmatchcase
 from pathlib import Path
+from typing import Optional
 
 _MARKDOWN_EXTENSIONS = {".md", ".markdown"}
 _IGNORED_DIRECTORIES = {
@@ -49,7 +50,7 @@ def _is_excluded(relative_path: Path, exclude_patterns: list[str]) -> bool:
 
 def discover_markdown_files(
     targets: list[str],
-    exclude_patterns: list[str] | None = None,
+    exclude_patterns: Optional[list[str]] = None,
 ) -> tuple[list[Path], list[Path], list[Path]]:
     """Resolve targets into markdown files.
 

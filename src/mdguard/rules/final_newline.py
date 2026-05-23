@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import List
 
+from typing import Optional
+
 from mdguard.core import LintIssue
 
 NAME = "final-newline"
@@ -26,7 +28,7 @@ def check(
     return []
 
 
-def fix(line: str, ctx: dict | None = None) -> str:
+def fix(line: str, ctx: Optional[dict] = None) -> str:
     """Add exactly one final newline when it is missing, preserving style."""
     if line.endswith(("\n", "\r")):
         return line
