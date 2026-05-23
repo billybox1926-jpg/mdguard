@@ -31,6 +31,22 @@ def _validate_rule_names(selected_rules: list[str], source: str, rules: dict[str
     return None
 
 
+def _load_ignore_file() -> list[str]:
+    ignore_file = Path(".mdguardignore")
+    if not ignore_file.exists():
+        return []
+    try:
+        lines = ignore_file.read_text(encoding="utf-8").splitlines()
+        return [
+            line.strip()
+            for line in lines
+            if line.strip() and not line.strip().startswith("#")
+        ]
+    except Exception as exc:
+        print(f"⚠️  Could not read .mdguardignore: {exc}", file=sys.stderr)
+        return []
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Markdown Linter")
     parser.add_argument("files", nargs="*", help="Markdown files")
@@ -112,7 +128,7 @@ def main() -> int:
 
     markdown_files, missing_targets, empty_directories = discover_markdown_files(
         args.files,
-        exclude_patterns=args.exclude,
+        exclude_patterns=_load_ignore_file() + args.exclude,
     )
 
     if missing_targets:

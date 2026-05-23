@@ -11,22 +11,37 @@
 - `--rules PATH` loads a JSON rules configuration file.
 - `--exclude PATTERN` excludes matching Markdown files or directories during
   discovery. It can be repeated.
+- `.mdguardignore` (in the current working directory) provides persistent
+  exclusion patterns.
 
 Unknown rule names are rejected with a nonzero exit code and a list of valid rule
 names.
 
 ## Exclude patterns
 
-Use repeated `--exclude` flags to skip project-specific generated, vendored, or
-otherwise noisy Markdown paths:
-
-```bash
-mdguard . --exclude "docs/generated/**" --exclude "vendor"
-```
+Use repeated `--exclude` flags or a `.mdguardignore` file to skip
+project-specific generated, vendored, or otherwise noisy Markdown paths.
 
 Patterns are slash-separated globs matched against paths relative to each
 directory target. Backslashes in patterns are normalized to slashes so the same
 pattern style works on Windows and POSIX shells.
+
+### .mdguardignore
+
+If a `.mdguardignore` file exists in the current working directory, its lines
+are added to the exclusion patterns. Lines starting with `#` are treated as
+comments. Empty lines are ignored.
+
+Example `.mdguardignore`:
+
+```text
+# Ignore generated documentation
+docs/generated/**
+# Ignore vendored files
+vendor
+```
+
+### Pattern behavior
 
 Useful forms:
 

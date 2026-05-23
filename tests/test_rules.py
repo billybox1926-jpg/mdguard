@@ -70,6 +70,27 @@ class TestRules(unittest.TestCase):
         self.assertTrue(any(i.rule == "final-newline" for i in issues))
         self.assertEqual(fixed, "# Title\n")
 
+    def test_rules_ignore_fenced_code_blocks(self):
+        text = (
+            "# Real H1\n"
+            "```\n"
+            "# Heading inside code block\n"
+            "This line is definitely longer than ten characters.\n"
+            "[link]()\n"
+            "```\n"
+        )
+        # Enable rules that should ignore code blocks
+        config = {
+            "line-length": {"max": 10},
+            "empty-link": True,
+            "heading-jump": True,
+            "missing-h1": True,
+            "duplicate-headings": True,
+        }
+        issues, _ = self._lint(text, config)
+        # None of these should fire inside the block
+        self.assertEqual(len(issues), 0, f"Expected 0 issues, got: {[str(i) for i in issues]}")
+
 
 if __name__ == "__main__":
     unittest.main()

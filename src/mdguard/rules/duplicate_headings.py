@@ -12,6 +12,8 @@ DEFAULT_ENABLED = False
 def check(
     file: Path, line: str, lineno: int, ctx: dict, config: dict
 ) -> List[LintIssue]:
+    if ctx.get("in_code_block"):
+        return []
     if not (match := ctx["heading_re"].match(line)):
         return []
     title = match.group(2).strip().lower()

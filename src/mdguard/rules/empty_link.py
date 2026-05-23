@@ -13,6 +13,8 @@ def check(
     file: Path, line: str, lineno: int, ctx: dict, config: dict
 ) -> List[LintIssue]:
     """Flag markdown links with empty URLs."""
+    if ctx.get("in_code_block"):
+        return []
     issues: List[LintIssue] = []
     for _, url in ctx["link_re"].findall(line):
         if not url.strip():

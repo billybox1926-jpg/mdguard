@@ -25,16 +25,16 @@
 
 Tracked in the Phase 3 GitHub milestone.
 
-- [ ] Refresh and align docs with shipped MVP behavior
+- [x] Refresh and align docs with shipped MVP behavior
 - [ ] Stabilize and document JSON schema expectations
-- [ ] Add project-specific ignore/exclude patterns
+- [x] Add project-specific ignore/exclude patterns (via .mdguardignore)
 - [ ] Add `pyproject.toml` configuration support
 - [ ] Refine Markdown-specific line-length exceptions
-- [ ] Make rules aware of fenced code blocks
+- [x] Make rules aware of fenced code blocks
 - [ ] Improve autofix fixed/remaining reporting semantics
 - [ ] Add release validation and package smoke tests
 - [ ] Verify the supported Python version matrix
-- [ ] Dogfood mdguard against this repository's docs in CI
+- [x] Dogfood mdguard against this repository's docs in CI
 
 ## Phase 4: ecosystem integration and advanced Markdown intelligence
 

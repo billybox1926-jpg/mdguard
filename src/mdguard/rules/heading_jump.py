@@ -13,6 +13,8 @@ def check(
     file: Path, line: str, lineno: int, ctx: dict, config: dict
 ) -> List[LintIssue]:
     """Flag heading level jumps greater than 1 (e.g., h1 -> h3)."""
+    if ctx.get("in_code_block"):
+        return []
     if not (match := ctx["heading_re"].match(line)):
         return []
     level = len(match.group(1))

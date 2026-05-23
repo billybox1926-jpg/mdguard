@@ -25,6 +25,7 @@ class LintIssue:
 
 _HEADING_RE = re.compile(r"^(#{1,6})\s*(.+?)\s*$")
 _LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]*)\)")
+_CODE_FENCE_RE = re.compile(r"^(?:`{3,}|~{3,})")
 
 
 def display_width(text: str) -> int:
@@ -129,14 +130,21 @@ def process_file(path: Path, rules: dict[str, Any], config: dict[str, Any], fix:
     ctx: dict[str, Any] = {
         "heading_re": _HEADING_RE,
         "link_re": _LINK_RE,
+        "code_fence_re": _CODE_FENCE_RE,
         "prev_level": 0,
         "seen_headings": {},
         "has_h1": False,
+        "in_code_block": False,
         "lines": fixed_lines,
     }
 
     for i, _ in enumerate(lines, 1):
         stripped = fixed_lines[i - 1].rstrip("\n\r")
+        
+        is_fence = bool(_CODE_FENCE_RE.match(stripped))
+        if is_fence:
+            ctx["in_code_block"] = not ctx["in_code_block"]
+
         for rule_name, rule in rules.items():
             if config.get(rule_name, rule["default_enabled"]):
                 new_issues = rule["check"](path, stripped, i, ctx, config)

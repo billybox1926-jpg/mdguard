@@ -18,6 +18,8 @@ def _configured_max(config: dict) -> int | None:
 
 
 def check(file, line, lineno, ctx, config):
+    if ctx.get("in_code_block"):
+        return []
     max_len = _configured_max(config)
     if max_len is None:
         return []

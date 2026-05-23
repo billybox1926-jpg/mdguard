@@ -13,6 +13,8 @@ def check(
     file: Path, line: str, lineno: int, ctx: dict, config: dict
 ) -> List[LintIssue]:
     """Collect heading data during the line-by-line pass."""
+    if ctx.get("in_code_block"):
+        return []
     if match := ctx["heading_re"].match(line):
         if len(match.group(1)) == 1:
             ctx["has_h1"] = True

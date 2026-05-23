@@ -1,7 +1,8 @@
+import json
+import os
 import subprocess
 import sys
 import tempfile
-import json
 import unittest
 from pathlib import Path
 
@@ -110,6 +111,28 @@ class TestCli(unittest.TestCase):
             self.assertEqual(report["issue_count"], 0)
             self.assertEqual([Path(f["path"]).name for f in report["files"]], ["keep.md"])
 
+    def test_mdguardignore_skips_matching_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "a.md").write_text("# a\n", encoding="utf-8")
+            (root / "b.md").write_text("# b\n", encoding="utf-8")
+            (root / ".mdguardignore").write_text("b.md\n", encoding="utf-8")
+
+            # Must run from 'root' so .mdguardignore is found by Path(".mdguardignore").
+            src_dir = str(Path(__file__).parent.parent / "src")
+            env = {**os.environ, "PYTHONPATH": src_dir}
+
+            proc = subprocess.run(
+                [sys.executable, "-m", "mdguard.cli", "."],
+                cwd=str(root),
+                capture_output=True,
+                text=True,
+                check=False,
+                env=env,
+            )
+            self.assertEqual(proc.returncode, 0)
+            self.assertIn("a.md", proc.stderr)
+            self.assertNotIn("b.md", proc.stderr)
 
     def test_final_newline_fix_preserves_crlf_style(self):
         with tempfile.TemporaryDirectory() as tmp:
