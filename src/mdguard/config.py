@@ -1,4 +1,5 @@
 """Configuration discovery and parsing."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -45,7 +46,9 @@ def _parse_tool_mdguard_subset(text: str) -> dict[str, Any]:
     return data
 
 
-def load_pyproject_config(start: Optional[Path] = None) -> Tuple[dict[str, Any], Optional[Path], Optional[str]]:
+def load_pyproject_config(
+    start: Optional[Path] = None,
+) -> Tuple[dict[str, Any], Optional[Path], Optional[str]]:
     current = (start or Path.cwd()).resolve()
     if current.is_file():
         current = current.parent
@@ -69,7 +72,9 @@ def load_pyproject_config(start: Optional[Path] = None) -> Tuple[dict[str, Any],
     return {}, None, None
 
 
-def apply_tool_config(base: dict[str, object], tool_config: dict[str, Any]) -> tuple[dict[str, object], list[str]]:
+def apply_tool_config(
+    base: dict[str, object], tool_config: dict[str, Any]
+) -> tuple[dict[str, object], list[str]]:
     config = dict(base)
     excludes: list[str] = []
     if "max_length" in tool_config:

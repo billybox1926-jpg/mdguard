@@ -1,4 +1,5 @@
 """Baseline file support for incremental mdguard adoption."""
+
 from __future__ import annotations
 
 import json
@@ -20,12 +21,22 @@ def write_baseline(path: Path, issues: list[LintIssue]) -> None:
     payload = {
         "schema_version": 1,
         "issues": [
-            {"key": issue_key(issue), "path": str(issue.file), "line": issue.line, "rule": issue.rule, "message": issue.message}
+            {
+                "key": issue_key(issue),
+                "path": str(issue.file),
+                "line": issue.line,
+                "rule": issue.rule,
+                "message": issue.message,
+            }
             for issue in issues
         ],
     }
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
 
-def filter_baselined(issues: list[LintIssue], baseline_keys: set[str]) -> list[LintIssue]:
+def filter_baselined(
+    issues: list[LintIssue], baseline_keys: set[str]
+) -> list[LintIssue]:
     return [issue for issue in issues if issue_key(issue) not in baseline_keys]

@@ -80,7 +80,9 @@ def load_rules() -> dict[str, Any]:
                     "default_enabled": getattr(module, "DEFAULT_ENABLED", True),
                     "fix": getattr(module, "fix", None),
                     "post_check": getattr(module, "post_check", None),
-                    "allow_add_line_ending": getattr(module, "ALLOW_ADD_LINE_ENDING", False),
+                    "allow_add_line_ending": getattr(
+                        module, "ALLOW_ADD_LINE_ENDING", False
+                    ),
                     "description": getattr(module, "DESCRIPTION", ""),
                     "tags": getattr(module, "TAGS", ()),
                     "aliases": getattr(module, "ALIASES", ()),
@@ -110,11 +112,16 @@ def _get_line_ending(line: str) -> str:
     return ""
 
 
-def _validate_fix(original: str, fixed: str, rule_name: str, allow_add_line_ending: bool = False) -> str:
+def _validate_fix(
+    original: str, fixed: str, rule_name: str, allow_add_line_ending: bool = False
+) -> str:
     orig_ending = _get_line_ending(original)
     fixed_ending = _get_line_ending(fixed)
     if orig_ending and not fixed_ending:
-        print(f"⚠️  Rule '{rule_name}' fix stripped line ending. Preserving it.", file=sys.stderr)
+        print(
+            f"⚠️  Rule '{rule_name}' fix stripped line ending. Preserving it.",
+            file=sys.stderr,
+        )
         return fixed + orig_ending
     if not allow_add_line_ending and not orig_ending and fixed_ending:
         print(
@@ -125,7 +132,9 @@ def _validate_fix(original: str, fixed: str, rule_name: str, allow_add_line_endi
     return fixed
 
 
-def process_file(path: Path, rules: dict[str, Any], config: dict[str, Any], fix: bool = False) -> list[LintIssue]:
+def process_file(
+    path: Path, rules: dict[str, Any], config: dict[str, Any], fix: bool = False
+) -> list[LintIssue]:
     issues: list[LintIssue] = []
     text, original_encoding = read_file_text(path)
     if text is None:
@@ -167,9 +176,15 @@ def process_file(path: Path, rules: dict[str, Any], config: dict[str, Any], fix:
             ctx["suppressed_rules"] = set()
             suppressed_all = False
             disabled_specific = set()
-        if "mdguard-disable" in stripped and "next-line" not in stripped and "disable-line" not in stripped:
+        if (
+            "mdguard-disable" in stripped
+            and "next-line" not in stripped
+            and "disable-line" not in stripped
+        ):
             tokens = stripped.replace("-->", "").split()
-            rules_to_disable = [t for t in tokens if t not in {"<!--", "mdguard-disable"}]
+            rules_to_disable = [
+                t for t in tokens if t not in {"<!--", "mdguard-disable"}
+            ]
             if rules_to_disable:
                 ctx.setdefault("suppressed_rules", set()).update(rules_to_disable)
             else:
@@ -177,16 +192,26 @@ def process_file(path: Path, rules: dict[str, Any], config: dict[str, Any], fix:
         same_line_rules: set[str] = set()
         if "mdguard-disable-line" in stripped:
             tokens = stripped.replace("-->", "").split()
-            same_line_rules = {t for t in tokens if t not in {"<!--", "mdguard-disable-line"}}
+            same_line_rules = {
+                t for t in tokens if t not in {"<!--", "mdguard-disable-line"}
+            }
             if not same_line_rules:
                 suppressed_all = True
         if "mdguard-disable-next-line" in stripped:
             tokens = stripped.replace("-->", "").split()
-            rules_next = {t for t in tokens if t not in {"<!--", "mdguard-disable-next-line"}}
+            rules_next = {
+                t for t in tokens if t not in {"<!--", "mdguard-disable-next-line"}
+            }
             ctx["suppress_next_rules"] = rules_next or {"*"}
 
         for rule_name, rule in rules.items():
-            if suppressed_all or "*" in next_specific or rule_name in disabled_specific or rule_name in next_specific or rule_name in same_line_rules:
+            if (
+                suppressed_all
+                or "*" in next_specific
+                or rule_name in disabled_specific
+                or rule_name in next_specific
+                or rule_name in same_line_rules
+            ):
                 continue
             if config.get(rule_name, rule["default_enabled"]):
                 new_issues = rule["check"](path, stripped, i, ctx, config)

@@ -27,7 +27,9 @@ def _unknown_rule_message(source: str, rule_name: str, rules: dict[str, object])
     return f"Unknown rule '{rule_name}' in {source}. Valid rule names: {_format_valid_rule_names(rules)}"
 
 
-def _validate_rule_names(selected_rules: list[str], source: str, rules: dict[str, object]) -> Optional[str]:
+def _validate_rule_names(
+    selected_rules: list[str], source: str, rules: dict[str, object]
+) -> Optional[str]:
     for name in selected_rules:
         if name not in rules:
             return _unknown_rule_message(source, name, rules)
@@ -40,7 +42,11 @@ def _load_ignore_file() -> list[str]:
         return []
     try:
         lines = ignore_file.read_text(encoding="utf-8").splitlines()
-        return [line.strip() for line in lines if line.strip() and not line.strip().startswith("#")]
+        return [
+            line.strip()
+            for line in lines
+            if line.strip() and not line.strip().startswith("#")
+        ]
     except Exception as exc:
         print(f"⚠️  Could not read .mdguardignore: {exc}", file=sys.stderr)
         return []
@@ -63,22 +69,70 @@ def _package_version() -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Markdown Linter")
-    parser.add_argument("files", nargs="*", help="Markdown files, directories, or '-' for stdin")
-    parser.add_argument("--version", action="version", version=f"mdguard {_package_version()}")
+    parser.add_argument(
+        "files", nargs="*", help="Markdown files, directories, or '-' for stdin"
+    )
+    parser.add_argument(
+        "--version", action="version", version=f"mdguard {_package_version()}"
+    )
     parser.add_argument("--fix", action="store_true", help="Auto-fix safe issues")
-    parser.add_argument("--strict", action="store_true", help="Strict mode (enables all rules, max_length=100)")
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Strict mode (enables all rules, max_length=100)",
+    )
     parser.add_argument("--list-rules", action="store_true")
-    parser.add_argument("--verbose", action="store_true", help="Show verbose rule metadata with --list-rules")
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Show verbose rule metadata with --list-rules",
+    )
     parser.add_argument("--max-length", type=int, default=None)
-    parser.add_argument("--disable", action="append", default=[], help="Disable specific rules (can be used multiple times)")
-    parser.add_argument("--enable", action="append", default=[], help="Enable specific rules (can be used multiple times)")
-    parser.add_argument("--rules", type=Path, help="JSON config file with a rules object for enabling/disabling rules")
-    parser.add_argument("--exclude", action="append", default=[], help="Exclude files or directories using slash-separated glob patterns")
-    parser.add_argument("--json", action="store_true", dest="json_output", help="Emit lint results as JSON")
-    parser.add_argument("--format", choices=["human", "json", "github"], default="human")
-    parser.add_argument("--stdin-filename", default="<stdin>", help="Display path to use when reading '-' from stdin")
-    parser.add_argument("--baseline", type=Path, help="Suppress issues already present in baseline JSON")
-    parser.add_argument("--write-baseline", type=Path, help="Write current issues to baseline JSON and exit 0")
+    parser.add_argument(
+        "--disable",
+        action="append",
+        default=[],
+        help="Disable specific rules (can be used multiple times)",
+    )
+    parser.add_argument(
+        "--enable",
+        action="append",
+        default=[],
+        help="Enable specific rules (can be used multiple times)",
+    )
+    parser.add_argument(
+        "--rules",
+        type=Path,
+        help="JSON config file with a rules object for enabling/disabling rules",
+    )
+    parser.add_argument(
+        "--exclude",
+        action="append",
+        default=[],
+        help="Exclude files or directories using slash-separated glob patterns",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Emit lint results as JSON",
+    )
+    parser.add_argument(
+        "--format", choices=["human", "json", "github"], default="human"
+    )
+    parser.add_argument(
+        "--stdin-filename",
+        default="<stdin>",
+        help="Display path to use when reading '-' from stdin",
+    )
+    parser.add_argument(
+        "--baseline", type=Path, help="Suppress issues already present in baseline JSON"
+    )
+    parser.add_argument(
+        "--write-baseline",
+        type=Path,
+        help="Write current issues to baseline JSON and exit 0",
+    )
     args = parser.parse_args()
 
     rules = load_rules()
@@ -88,7 +142,9 @@ def main() -> int:
             status = "enabled" if rules[name]["default_enabled"] else "disabled"
             if args.verbose:
                 fixable = "fixable" if rules[name].get("fixable") else "manual"
-                print(f"  • {name} ({status}, {fixable}) - {rules[name].get('description', '')}")
+                print(
+                    f"  • {name} ({status}, {fixable}) - {rules[name].get('description', '')}"
+                )
             else:
                 print(f"  • {name} ({status})")
         return 0
@@ -115,7 +171,9 @@ def main() -> int:
             print(f"rules config file not found: {args.rules}", file=sys.stderr)
             return 2
         except JSONDecodeError as exc:
-            print(f"invalid JSON in rules config {args.rules}: {exc.msg}", file=sys.stderr)
+            print(
+                f"invalid JSON in rules config {args.rules}: {exc.msg}", file=sys.stderr
+            )
             return 2
         if not isinstance(rules_config, dict):
             print("rules config must contain a JSON object", file=sys.stderr)
@@ -124,7 +182,9 @@ def main() -> int:
         if not isinstance(configured_rules, dict):
             print("rules config must contain an object at 'rules'", file=sys.stderr)
             return 2
-        unknown_from_config = _validate_rule_names(list(configured_rules), f"--rules {args.rules}", rules)
+        unknown_from_config = _validate_rule_names(
+            list(configured_rules), f"--rules {args.rules}", rules
+        )
         if unknown_from_config:
             print(unknown_from_config, file=sys.stderr)
             return 2
@@ -171,13 +231,17 @@ def main() -> int:
         return 1
     if empty_directories:
         for directory in empty_directories:
-            print(f"No Markdown files found under directory: {directory}", file=sys.stderr)
+            print(
+                f"No Markdown files found under directory: {directory}", file=sys.stderr
+            )
         return 1
     if not markdown_files:
         print("No Markdown files found in provided targets.", file=sys.stderr)
         return 1
 
-    result = RunResult(files_checked=[display_map.get(p, p) for p in markdown_files], config=config)
+    result = RunResult(
+        files_checked=[display_map.get(p, p) for p in markdown_files], config=config
+    )
     json_file_issues = []
     all_original_issues = []
     for path in markdown_files:
@@ -199,7 +263,10 @@ def main() -> int:
         json_file_issues = result.issues_by_file()
     if args.write_baseline:
         write_baseline(args.write_baseline, all_original_issues)
-        print(f"Wrote baseline with {len(all_original_issues)} issue(s) to {args.write_baseline}", file=sys.stderr)
+        print(
+            f"Wrote baseline with {len(all_original_issues)} issue(s) to {args.write_baseline}",
+            file=sys.stderr,
+        )
         return 0
 
     output_format = "json" if args.json_output else args.format
@@ -218,7 +285,10 @@ def main() -> int:
                 print(f"✅ No issues found in {path}.", file=sys.stderr)
         summary = build_summary(result)
         if result.fixed_issue_count:
-            print(f"🔧 Fixed {result.fixed_issue_count} auto-fixable issue(s).", file=sys.stderr)
+            print(
+                f"🔧 Fixed {result.fixed_issue_count} auto-fixable issue(s).",
+                file=sys.stderr,
+            )
         if result.issues:
             print(summary, file=sys.stderr)
 

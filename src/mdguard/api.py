@@ -1,4 +1,5 @@
 """Public API for embedding mdguard."""
+
 from __future__ import annotations
 
 import time
@@ -24,15 +25,17 @@ def lint_paths(
     )
     result = RunResult(files_checked=markdown_files, config=dict(config or {}))
     for target in missing_targets:
-        result.skipped_files.append(SkippedFile(target, 'missing'))
+        result.skipped_files.append(SkippedFile(target, "missing"))
     for target in empty_dirs:
-        result.skipped_files.append(SkippedFile(target, 'no-markdown-files'))
+        result.skipped_files.append(SkippedFile(target, "no-markdown-files"))
     for path in markdown_files:
         issues = process_file(path, rules, dict(config or {}), fix=fix)
         if fix:
-            fixed = [issue for issue in issues if rules.get(issue.rule, {}).get('fix')]
+            fixed = [issue for issue in issues if rules.get(issue.rule, {}).get("fix")]
             result.fixed_issue_count += len(fixed)
-            issues = [issue for issue in issues if not rules.get(issue.rule, {}).get('fix')]
+            issues = [
+                issue for issue in issues if not rules.get(issue.rule, {}).get("fix")
+            ]
         result.issues.extend(issues)
     result.elapsed_seconds = time.perf_counter() - start
     return result

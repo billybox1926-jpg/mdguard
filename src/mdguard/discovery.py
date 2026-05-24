@@ -39,7 +39,9 @@ def _is_excluded(relative_path: Path, exclude_patterns: list[str]) -> bool:
             continue
         if fnmatchcase(path_text, pattern):
             return True
-        if pattern.endswith("/**") and path_text.startswith(pattern[:-3].rstrip("/") + "/"):
+        if pattern.endswith("/**") and path_text.startswith(
+            pattern[:-3].rstrip("/") + "/"
+        ):
             return True
         if not any(char in pattern for char in "*?[") and (
             path_text == pattern or path_text.startswith(pattern + "/")
@@ -68,7 +70,9 @@ def discover_markdown_files(
             continue
 
         if target.is_file():
-            if target.suffix.lower() in _MARKDOWN_EXTENSIONS and not _is_excluded(Path(target.name), exclude_patterns):
+            if target.suffix.lower() in _MARKDOWN_EXTENSIONS and not _is_excluded(
+                Path(target.name), exclude_patterns
+            ):
                 markdown_files.append(target)
             continue
 
@@ -78,7 +82,10 @@ def discover_markdown_files(
                 for p in target.rglob("*")
                 if p.is_file()
                 and p.suffix.lower() in _MARKDOWN_EXTENSIONS
-                and not any(part in _IGNORED_DIRECTORIES for part in p.relative_to(target).parts[:-1])
+                and not any(
+                    part in _IGNORED_DIRECTORIES
+                    for part in p.relative_to(target).parts[:-1]
+                )
                 and not _is_excluded(p.relative_to(target), exclude_patterns)
             )
             if found:

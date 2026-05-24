@@ -1,4 +1,5 @@
 """Local production-readiness gate for mdguard."""
+
 from __future__ import annotations
 
 import json
@@ -35,7 +36,9 @@ def assert_json_output() -> None:
     )
     report = json.loads(proc.stdout)
     if report.get("issue_count") != 0:
-        raise SystemExit(f"expected clean docs, got {report.get('issue_count')} issue(s)")
+        raise SystemExit(
+            f"expected clean docs, got {report.get('issue_count')} issue(s)"
+        )
 
 
 def smoke_wheel() -> None:
@@ -56,7 +59,9 @@ def smoke_wheel() -> None:
 def main() -> int:
     clean()
     run([PYTHON, "-m", "unittest", "discover", "-s", "tests", "-v"])
-    py_files = subprocess.check_output(["git", "ls-files", "*.py"], cwd=ROOT, text=True).splitlines()
+    py_files = subprocess.check_output(
+        ["git", "ls-files", "*.py"], cwd=ROOT, text=True
+    ).splitlines()
     run([PYTHON, "-m", "py_compile", *py_files])
     run([PYTHON, "-m", "mdguard.cli", "--help"])
     run([PYTHON, "-m", "mdguard.cli", "--version"])

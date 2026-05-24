@@ -58,7 +58,12 @@ class TestCli(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "README.md"
             p.write_text("# title\n", encoding="utf-8")
-            proc = subprocess.run([sys.executable, "-m", "mdguard.cli", str(p)], capture_output=True, text=True, check=False)
+            proc = subprocess.run(
+                [sys.executable, "-m", "mdguard.cli", str(p)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
             self.assertEqual(proc.returncode, 0)
             self.assertIn(f"No issues found in {p}", proc.stderr)
 
@@ -71,14 +76,24 @@ class TestCli(unittest.TestCase):
             (nested / "b.markdown").write_text("# b\n", encoding="utf-8")
             (nested / "c.txt").write_text("not markdown\n", encoding="utf-8")
 
-            proc = subprocess.run([sys.executable, "-m", "mdguard.cli", str(root / "docs")], capture_output=True, text=True, check=False)
+            proc = subprocess.run(
+                [sys.executable, "-m", "mdguard.cli", str(root / "docs")],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
             self.assertEqual(proc.returncode, 0)
             self.assertIn("a.md", proc.stderr)
             self.assertIn("b.markdown", proc.stderr)
             self.assertNotIn("c.txt", proc.stderr)
 
     def test_missing_path_exits_nonzero(self):
-        proc = subprocess.run([sys.executable, "-m", "mdguard.cli", "definitely-missing-target"], capture_output=True, text=True, check=False)
+        proc = subprocess.run(
+            [sys.executable, "-m", "mdguard.cli", "definitely-missing-target"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
         self.assertNotEqual(proc.returncode, 0)
         self.assertIn("not found", proc.stderr)
 
@@ -87,7 +102,12 @@ class TestCli(unittest.TestCase):
             empty_dir = Path(tmp) / "docs"
             empty_dir.mkdir()
             (empty_dir / "notes.txt").write_text("hello\n", encoding="utf-8")
-            proc = subprocess.run([sys.executable, "-m", "mdguard.cli", str(empty_dir)], capture_output=True, text=True, check=False)
+            proc = subprocess.run(
+                [sys.executable, "-m", "mdguard.cli", str(empty_dir)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
             self.assertNotEqual(proc.returncode, 0)
             self.assertIn("No Markdown files found under directory", proc.stderr)
 
@@ -100,7 +120,10 @@ class TestCli(unittest.TestCase):
             keep = docs / "keep.md"
             skipped = generated / "api.md"
             keep.write_text("# keep\n", encoding="utf-8")
-            skipped.write_text("This generated line is intentionally far too long for the default line length limit and should not be linted when excluded.\n", encoding="utf-8")
+            skipped.write_text(
+                "This generated line is intentionally far too long for the default line length limit and should not be linted when excluded.\n",
+                encoding="utf-8",
+            )
 
             proc = subprocess.run(
                 [
@@ -119,7 +142,9 @@ class TestCli(unittest.TestCase):
             self.assertEqual(proc.returncode, 0)
             report = json.loads(proc.stdout)
             self.assertEqual(report["issue_count"], 0)
-            self.assertEqual([Path(f["path"]).name for f in report["files"]], ["keep.md"])
+            self.assertEqual(
+                [Path(f["path"]).name for f in report["files"]], ["keep.md"]
+            )
 
     def test_mdguardignore_skips_matching_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -170,7 +195,9 @@ class TestCli(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(lint_proc.returncode, 1)
-            self.assertIn("file must end with a final newline [final-newline]", lint_proc.stderr)
+            self.assertIn(
+                "file must end with a final newline [final-newline]", lint_proc.stderr
+            )
 
             fix_proc = subprocess.run(
                 [sys.executable, "-m", "mdguard.cli", str(p), "--fix"],
@@ -181,14 +208,20 @@ class TestCli(unittest.TestCase):
             self.assertEqual(fix_proc.returncode, 0)
             self.assertEqual(p.read_text(encoding="utf-8"), "# title\n")
 
-
     def test_missing_rules_config_file_exits_nonzero(self):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "README.md"
             target.write_text("# title\n", encoding="utf-8")
             missing = Path(tmp) / "missing-rules.json"
             proc = subprocess.run(
-                [sys.executable, "-m", "mdguard.cli", str(target), "--rules", str(missing)],
+                [
+                    sys.executable,
+                    "-m",
+                    "mdguard.cli",
+                    str(target),
+                    "--rules",
+                    str(missing),
+                ],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -246,7 +279,14 @@ class TestCli(unittest.TestCase):
             target = Path(tmp) / "README.md"
             target.write_text("# title\n", encoding="utf-8")
             proc = subprocess.run(
-                [sys.executable, "-m", "mdguard.cli", str(target), "--enable", "no-such-rule"],
+                [
+                    sys.executable,
+                    "-m",
+                    "mdguard.cli",
+                    str(target),
+                    "--enable",
+                    "no-such-rule",
+                ],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -260,7 +300,14 @@ class TestCli(unittest.TestCase):
             target = Path(tmp) / "README.md"
             target.write_text("# title\n", encoding="utf-8")
             proc = subprocess.run(
-                [sys.executable, "-m", "mdguard.cli", str(target), "--disable", "no-such-rule"],
+                [
+                    sys.executable,
+                    "-m",
+                    "mdguard.cli",
+                    str(target),
+                    "--disable",
+                    "no-such-rule",
+                ],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -289,7 +336,9 @@ class TestCli(unittest.TestCase):
             target = Path(tmp) / "README.md"
             target.write_text("Paragraph with trailing spaces  \n", encoding="utf-8")
             cfg = Path(tmp) / "rules.json"
-            cfg.write_text('{"rules": {"trailing-whitespace": false}}', encoding="utf-8")
+            cfg.write_text(
+                '{"rules": {"trailing-whitespace": false}}', encoding="utf-8"
+            )
             proc = subprocess.run(
                 [sys.executable, "-m", "mdguard.cli", str(target), "--rules", str(cfg)],
                 capture_output=True,
@@ -314,7 +363,9 @@ class TestCli(unittest.TestCase):
             self.assertEqual(report["tool"]["name"], "mdguard")
             self.assertEqual(report["issue_count"], 1)
             self.assertEqual(report["files"][0]["path"], str(p))
-            self.assertEqual(report["files"][0]["issues"][0]["rule"], "trailing-whitespace")
+            self.assertEqual(
+                report["files"][0]["issues"][0]["rule"], "trailing-whitespace"
+            )
 
     def test_json_output_with_clean_file(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -350,7 +401,10 @@ class TestCli(unittest.TestCase):
     def test_fix_json_reports_only_remaining_unfixed_issues(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "README.md"
-            p.write_text("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  \n", encoding="utf-8")
+            p.write_text(
+                "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  \n",
+                encoding="utf-8",
+            )
             proc = subprocess.run(
                 [sys.executable, "-m", "mdguard.cli", str(p), "--fix", "--json"],
                 capture_output=True,

@@ -23,7 +23,9 @@ class TestPhaseIssues(unittest.TestCase):
         )
 
     def test_stdin_json_uses_supplied_filename(self):
-        proc = self.run_cli("-", "--stdin-filename", "README.md", "--json", input_text="# ok\n")
+        proc = self.run_cli(
+            "-", "--stdin-filename", "README.md", "--json", input_text="# ok\n"
+        )
         self.assertEqual(proc.returncode, 0, proc.stderr)
         report = json.loads(proc.stdout)
         self.assertEqual(report["files"][0]["path"], "README.md")
@@ -32,7 +34,8 @@ class TestPhaseIssues(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / "pyproject.toml").write_text(
-                '[tool.mdguard]\nmax_length = 10\ndisable = ["missing-h1"]\n', encoding="utf-8"
+                '[tool.mdguard]\nmax_length = 10\ndisable = ["missing-h1"]\n',
+                encoding="utf-8",
             )
             (root / "README.md").write_text("short\n", encoding="utf-8")
             proc = self.run_cli("README.md", cwd=root)
@@ -41,7 +44,10 @@ class TestPhaseIssues(unittest.TestCase):
     def test_inline_suppression_hides_selected_rule(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "README.md"
-            p.write_text("<!-- mdguard-disable-next-line line-length -->\nthis line is intentionally far too long\n", encoding="utf-8")
+            p.write_text(
+                "<!-- mdguard-disable-next-line line-length -->\nthis line is intentionally far too long\n",
+                encoding="utf-8",
+            )
             proc = self.run_cli(p, "--max-length", "10", "--disable", "missing-h1")
             self.assertEqual(proc.returncode, 0, proc.stderr)
 
@@ -56,14 +62,17 @@ class TestPhaseIssues(unittest.TestCase):
     def test_front_matter_is_not_linted_as_markdown(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "README.md"
-            p.write_text('---\ntitle: x\n---\n# Title\n', encoding="utf-8")
+            p.write_text("---\ntitle: x\n---\n# Title\n", encoding="utf-8")
             proc = self.run_cli(p, "--max-length", "20")
             self.assertEqual(proc.returncode, 0, proc.stderr)
 
     def test_markdown_line_length_exceptions(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "README.md"
-            p.write_text("# Title\nhttps://example.com/this/is/a/very/long/url\n| very | long | table | row |\n", encoding="utf-8")
+            p.write_text(
+                "# Title\nhttps://example.com/this/is/a/very/long/url\n| very | long | table | row |\n",
+                encoding="utf-8",
+            )
             proc = self.run_cli(p, "--max-length", "10")
             self.assertEqual(proc.returncode, 0, proc.stderr)
 
