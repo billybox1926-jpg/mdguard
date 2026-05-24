@@ -15,7 +15,8 @@ repos:
         args: [--strict]
 ```
 
-Use `--fix` locally when you want safe rewrites. In CI, prefer lint-only mode or run `--fix` in a separate formatting step so changed files are visible.
+Use `--fix` locally when you want safe rewrites. In CI, prefer lint-only mode or run `--fix` in a separate
+formatting step so changed files are visible.
 
 ## GitHub Actions annotations (#46)
 
@@ -29,4 +30,5 @@ Annotations are derived from the same structured issues as human and JSON output
 
 ## Editor integrations (#53)
 
-Recommended first path: run `mdguard --json` from an editor task or problem matcher. LSP is deferred until the public API remains stable across releases.
+Recommended first path: run `mdguard --json` from an editor task or problem matcher. LSP is deferred until
+the public API remains stable across releases.

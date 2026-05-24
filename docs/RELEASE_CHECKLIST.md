@@ -12,25 +12,23 @@
 ```bash
 python -m pip install -e .
 python -m unittest discover -s tests -v
-python -m mdguard.cli --help
-python -m mdguard.cli --list-rules
-python -m mdguard.cli README.md docs/*.md --json
+python scripts/validate.py
 ```
 
 Checklist:
 
 - [ ] Local test suite passes.
-- [ ] CLI help works.
+- [ ] CLI help and version output work.
 - [ ] Rule listing works.
 - [ ] JSON output is parseable.
-- [ ] No known high-severity defects remain.
+- [ ] Repository docs dogfood check passes.
 
 ## CI quality gates
 
-- [ ] Default branch CI is passing.
-- [ ] Supported Python versions pass in CI.
-- [ ] Release validation workflow passes, once implemented.
-- [ ] Repository docs dogfood check passes, once enabled.
+- [ ] Default branch CI is passing when Actions are available.
+- [ ] Supported Python versions pass locally or in CI.
+- [ ] Release validation workflow passes before publishing a tag.
+- [ ] Repository docs dogfood check passes.
 
 ## Packaging
 

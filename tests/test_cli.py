@@ -18,6 +18,16 @@ class TestCli(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
         self.assertIn("line-length", proc.stdout)
 
+    def test_version_option_reports_package_name(self):
+        proc = subprocess.run(
+            [sys.executable, "-m", "mdguard.cli", "--version"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("mdguard", proc.stdout)
+
     def test_unicode_line_length(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "u.md"

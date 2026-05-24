@@ -9,13 +9,12 @@ and AI-assisted coding workflows where documentation can get messy fast.
 
 ## Status
 
-Working MVP. The package has a `src/mdguard/` implementation, console entry
-point, recursive Markdown discovery, built-in rules, JSON output, conservative
-autofix, tests, and GitHub Actions CI.
+Working release candidate. The package has a `src/mdguard/` implementation, console entry
+point, recursive Markdown discovery, built-in rules, JSON/GitHub output, conservative
+autofix, baselines, inline suppressions, project configuration, tests, and local release
+validation.
 
-The next release-hardening work is tracked in GitHub issues. Current priorities
-are broader real-project usability, config, output schema polish, Markdown-aware
-edge cases, and release validation.
+Before publishing, run the release checklist and confirm the package name/version target.
 
 ## Install locally
 
@@ -112,6 +111,7 @@ See [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 ```bash
 python -m pip install -e .
 python -m unittest discover -s tests -v
+python scripts/validate.py
 ```
 
 ## Contributing

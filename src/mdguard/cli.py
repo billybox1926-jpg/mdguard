@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from importlib.metadata import PackageNotFoundError, version
 from json import JSONDecodeError
 from pathlib import Path
 from typing import Optional
@@ -53,9 +54,17 @@ def _read_stdin(stdin_filename: str) -> Path:
     return temp if stdin_filename == "<stdin>" else synthetic
 
 
+def _package_version() -> str:
+    try:
+        return version("mdguard")
+    except PackageNotFoundError:
+        return "0+unknown"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Markdown Linter")
     parser.add_argument("files", nargs="*", help="Markdown files, directories, or '-' for stdin")
+    parser.add_argument("--version", action="version", version=f"mdguard {_package_version()}")
     parser.add_argument("--fix", action="store_true", help="Auto-fix safe issues")
     parser.add_argument("--strict", action="store_true", help="Strict mode (enables all rules, max_length=100)")
     parser.add_argument("--list-rules", action="store_true")

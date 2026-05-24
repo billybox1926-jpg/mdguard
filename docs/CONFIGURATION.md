@@ -84,10 +84,11 @@ The `line-length` rule supports a rule-specific `max` value. If omitted, it uses
 Configuration is applied in this order:
 
 1. CLI defaults
-2. `--rules` JSON file
-3. `--strict`
-4. repeated `--enable` flags
-5. repeated `--disable` flags
+2. discovered `[tool.mdguard]` project configuration
+3. `--rules` JSON file
+4. `--strict`
+5. repeated `--enable` flags
+6. repeated `--disable` flags
 
 Later entries override earlier entries.
 
