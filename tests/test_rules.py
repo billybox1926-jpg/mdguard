@@ -62,7 +62,9 @@ class TestRules(unittest.TestCase):
         self.assertIn("exceeds 3 columns", long_lines[0].message)
 
     def test_line_length_can_be_disabled_explicitly(self):
-        issues, _ = self._lint("This line is very long indeed.\n", {"line-length": False, "max_length": 5})
+        issues, _ = self._lint(
+            "This line is very long indeed.\n", {"line-length": False, "max_length": 5}
+        )
         self.assertFalse(any(i.rule == "line-length" for i in issues))
 
     def test_final_newline_detects_and_fixes_when_enabled(self):
@@ -89,7 +91,9 @@ class TestRules(unittest.TestCase):
         }
         issues, _ = self._lint(text, config)
         # None of these should fire inside the block
-        self.assertEqual(len(issues), 0, f"Expected 0 issues, got: {[str(i) for i in issues]}")
+        self.assertEqual(
+            len(issues), 0, f"Expected 0 issues, got: {[str(i) for i in issues]}"
+        )
 
 
 if __name__ == "__main__":

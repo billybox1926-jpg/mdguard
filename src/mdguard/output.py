@@ -58,7 +58,9 @@ def build_summary(result: RunResult) -> str:
     )
 
 
-def build_json_report(file_issues: list[tuple[Path, list[LintIssue]]], result: Optional[RunResult] = None) -> JsonLintReport:
+def build_json_report(
+    file_issues: list[tuple[Path, list[LintIssue]]], result: Optional[RunResult] = None
+) -> JsonLintReport:
     files: list[JsonFileReport] = []
     issue_count = 0
     by_rule: dict[str, int] = {}
@@ -66,7 +68,9 @@ def build_json_report(file_issues: list[tuple[Path, list[LintIssue]]], result: O
     for path, issues in file_issues:
         serialized_issues: list[JsonIssue] = []
         for issue in issues:
-            serialized_issues.append({"line": issue.line, "rule": issue.rule, "message": issue.message})
+            serialized_issues.append(
+                {"line": issue.line, "rule": issue.rule, "message": issue.message}
+            )
             by_rule[issue.rule] = by_rule.get(issue.rule, 0) + 1
         files.append({"path": str(path), "issues": serialized_issues})
         issue_count += len(serialized_issues)
@@ -83,7 +87,8 @@ def build_json_report(file_issues: list[tuple[Path, list[LintIssue]]], result: O
         report["remaining_issue_count"] = result.remaining_issue_count
         report["files_checked"] = len(result.files_checked)
         report["skipped_files"] = [
-            {"path": str(skipped.path), "reason": skipped.reason} for skipped in result.skipped_files
+            {"path": str(skipped.path), "reason": skipped.reason}
+            for skipped in result.skipped_files
         ]
         report["elapsed_seconds"] = round(result.elapsed_seconds, 6)
     return report

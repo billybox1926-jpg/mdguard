@@ -8,7 +8,9 @@ from mdguard.core import LintIssue, display_width
 
 NAME = "line-length"
 DEFAULT_ENABLED = True
-DESCRIPTION = "Flag lines wider than the configured maximum with Markdown-aware exceptions."
+DESCRIPTION = (
+    "Flag lines wider than the configured maximum with Markdown-aware exceptions."
+)
 TAGS = ("formatting",)
 ALIASES = ("MD013",)
 
@@ -35,7 +37,11 @@ def _is_markdown_exception(line: str) -> bool:
 
 
 def check(file, line, lineno, ctx, config):
-    if ctx.get("in_code_block") or ctx.get("in_front_matter") or _is_markdown_exception(line):
+    if (
+        ctx.get("in_code_block")
+        or ctx.get("in_front_matter")
+        or _is_markdown_exception(line)
+    ):
         return []
     max_len = _configured_max(config)
     if max_len is None:
@@ -43,5 +49,7 @@ def check(file, line, lineno, ctx, config):
 
     width = display_width(line.rstrip("\n"))
     if width > max_len:
-        return [LintIssue(file, lineno, NAME, f"line exceeds {max_len} columns ({width})")]
+        return [
+            LintIssue(file, lineno, NAME, f"line exceeds {max_len} columns ({width})")
+        ]
     return []
