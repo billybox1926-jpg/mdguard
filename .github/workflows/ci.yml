@@ -59,7 +59,7 @@ jobs:
           python -m pip install --upgrade pip build
           python -m build
 
-  Hidden / bidirectional Unicode scan:
+  "Hidden / bidirectional Unicode scan":
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
