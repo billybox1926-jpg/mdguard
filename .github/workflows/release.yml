@@ -2,9 +2,10 @@ name: Release validation
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - 'v*'
+
+# Keep release validation manual while GitHub-hosted Actions are blocked by
+# private-repo billing/quota limits. The authoritative release gate is:
+# `python scripts/validate.py`.
 
 jobs:
   package-smoke-test:
