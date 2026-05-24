@@ -1,22 +1,11 @@
 name: CI
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'docs/**'
-      - 'pyproject.toml'
-      - '.github/workflows/ci.yml'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'docs/**'
-      - 'pyproject.toml'
-      - '.github/workflows/ci.yml'
+  workflow_dispatch:
+
+# GitHub-hosted Actions are intentionally manual for this repo so the default
+# branch is not blocked by private-repo billing/quota limits. Use
+# `python scripts/validate.py` as the authoritative local gate before pushing.
 
 jobs:
   test:

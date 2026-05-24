@@ -25,9 +25,9 @@ Checklist:
 
 ## CI quality gates
 
-- [ ] Default branch CI is passing when Actions are available.
-- [ ] Supported Python versions pass locally or in CI.
-- [ ] Release validation workflow passes before publishing a tag.
+- [ ] Default branch CI is available by manual dispatch when Actions quota is available.
+- [ ] Supported Python versions pass locally or in manual CI.
+- [ ] Release validation workflow passes before publishing a tag when Actions quota is available.
 - [ ] Repository docs dogfood check passes.
 
 ## Packaging
