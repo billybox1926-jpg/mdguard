@@ -1,13 +1,11 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
 
-# GitHub-hosted Actions are gated behind manual dispatch for routine pushes
+# GitHub-hosted Actions are gated behind manual dispatch for routine use
 # to avoid private-repo billing/quota limits on feature branches.
 # The authoritative local gate is: `python scripts/validate.py`
 
