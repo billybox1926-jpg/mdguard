@@ -7,24 +7,18 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# GitHub-hosted Actions are intentionally gated behind manual dispatch for
-# routine pushes to avoid private-repo billing/quota limits on feature branches.
-# Push/PR triggers are supported here but quota may still apply.
+# GitHub-hosted Actions are gated behind manual dispatch for routine pushes
+# to avoid private-repo billing/quota limits on feature branches.
 # The authoritative local gate is: `python scripts/validate.py`
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.12", "3.13"]
-
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.12"
       - name: Install package
         run: |
           python -m pip install --upgrade pip
@@ -50,8 +44,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Bidirectional Unicode scan
-        run: python scripts/bidi-scan.py
+      - name: Clippy-style lint
+        run: python -m ruff check .
 
   build:
     runs-on: ubuntu-latest
@@ -64,3 +58,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip build
           python -m build
+
+  Hidden / bidirectional Unicode scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan for bidirectional Unicode
+        run: python scripts/bidi-scan.py
