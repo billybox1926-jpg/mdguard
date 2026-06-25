@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from pathlib import Path
 from typing import Iterable, Optional, Union
 
@@ -18,7 +17,6 @@ def lint_paths(
     fix: bool = False,
     exclude_patterns: Optional[list[str]] = None,
 ) -> RunResult:
-    start = time.perf_counter()
     rules = load_rules()
     markdown_files, missing_targets, empty_dirs = discover_markdown_files(
         [str(path) for path in paths], exclude_patterns=exclude_patterns or []
@@ -37,5 +35,4 @@ def lint_paths(
                 issue for issue in issues if not rules.get(issue.rule, {}).get("fix")
             ]
         result.issues.extend(issues)
-    result.elapsed_seconds = time.perf_counter() - start
     return result
