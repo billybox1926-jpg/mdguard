@@ -20,7 +20,6 @@ class RunResult:
     skipped_files: list[SkippedFile] = field(default_factory=list)
     issues: list[LintIssue] = field(default_factory=list)
     fixed_issue_count: int = 0
-    elapsed_seconds: float = 0.0
     config: dict[str, object] = field(default_factory=dict)
 
     @property

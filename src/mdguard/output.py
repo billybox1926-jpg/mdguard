@@ -30,10 +30,8 @@ class JsonLintReport(TypedDict, total=False):
     tool: JsonTool
     files: list[JsonFileReport]
     issue_count: int
-    fixed_issue_count: int
     files_checked: int
     skipped_files: list[dict[str, str]]
-    elapsed_seconds: float
     summary: dict[str, dict[str, int]]
 
 
@@ -86,5 +84,4 @@ def build_json_report(
             {"path": str(skipped.path), "reason": skipped.reason}
             for skipped in result.skipped_files
         ]
-        report["elapsed_seconds"] = round(result.elapsed_seconds, 6)
     return report
