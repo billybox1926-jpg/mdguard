@@ -28,10 +28,6 @@ class RunResult:
     def issue_count(self) -> int:
         return len(self.issues)
 
-    @property
-    def remaining_issue_count(self) -> int:
-        return len(self.issues)
-
     def issues_by_file(self) -> list[tuple[Path, list[LintIssue]]]:
         grouped: dict[Path, list[LintIssue]] = {path: [] for path in self.files_checked}
         for issue in self.issues:

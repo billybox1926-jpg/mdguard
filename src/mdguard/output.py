@@ -32,7 +32,6 @@ class JsonLintReport(TypedDict, total=False):
     files: list[JsonFileReport]
     issue_count: int
     fixed_issue_count: int
-    remaining_issue_count: int
     files_checked: int
     skipped_files: list[dict[str, str]]
     elapsed_seconds: float
@@ -84,7 +83,6 @@ def build_json_report(
     }
     if result is not None:
         report["fixed_issue_count"] = result.fixed_issue_count
-        report["remaining_issue_count"] = result.remaining_issue_count
         report["files_checked"] = len(result.files_checked)
         report["skipped_files"] = [
             {"path": str(skipped.path), "reason": skipped.reason}
