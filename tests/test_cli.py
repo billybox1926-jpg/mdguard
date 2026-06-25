@@ -359,7 +359,6 @@ class TestCli(unittest.TestCase):
             )
             self.assertEqual(proc.returncode, 1)
             report = json.loads(proc.stdout)
-            self.assertEqual(report["schema_version"], 1)
             self.assertEqual(report["tool"]["name"], "mdguard")
             self.assertEqual(report["issue_count"], 1)
             self.assertEqual(report["files"][0]["path"], str(p))

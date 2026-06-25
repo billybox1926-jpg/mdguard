@@ -27,7 +27,6 @@ class JsonFileReport(TypedDict):
 
 
 class JsonLintReport(TypedDict, total=False):
-    schema_version: int
     tool: JsonTool
     files: list[JsonFileReport]
     issue_count: int
@@ -75,7 +74,6 @@ def build_json_report(
         issue_count += len(serialized_issues)
         by_file[str(path)] = len(serialized_issues)
     report: JsonLintReport = {
-        "schema_version": 1,
         "tool": {"name": "mdguard", "version": _version()},
         "files": files,
         "issue_count": issue_count,

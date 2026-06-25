@@ -21,7 +21,6 @@ class RunResult:
     issues: list[LintIssue] = field(default_factory=list)
     fixed_issue_count: int = 0
     elapsed_seconds: float = 0.0
-    schema_version: int = 1
     config: dict[str, object] = field(default_factory=dict)
 
     @property
