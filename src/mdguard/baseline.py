@@ -19,7 +19,6 @@ def load_baseline(path: Path) -> set[str]:
 
 def write_baseline(path: Path, issues: list[LintIssue]) -> None:
     payload = {
-        "schema_version": 1,
         "issues": [
             {
                 "key": issue_key(issue),
