@@ -4,7 +4,9 @@
 
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
-[![Status](https://img.shields.io/badge/status-release%20candidate-yellow.svg)](https://github.com/billybox1926-jpg/mdguard)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/billybox1926-jpg/mdguard/releases/tag/v0.1.0)
+[![CI](https://github.com/billybox1926-jpg/mdguard/workflows/CI/badge.svg)](https://github.com/billybox1926-jpg/mdguard/actions/workflows/ci.yml)
+[![Status](https://img.shields.io/badge/status-released-brightgreen.svg)](https://github.com/billybox1926-jpg/mdguard/releases/tag/v0.1.0)
 
 `mdguard` is a tiny, dependency-light Markdown linter and conservative autofixer
 for READMEs, docs folders, notes, and agent-generated repository documentation.
@@ -22,12 +24,10 @@ not replace, dedicated secret scanners and security review.
 
 ## Status
 
-Working release candidate. The package has a `src/mdguard/` implementation, console entry
+Released. The package has a `src/mdguard/` implementation, console entry
 point, recursive Markdown discovery, built-in rules, JSON/GitHub output, conservative
 autofix, baselines, inline suppressions, project configuration, tests, and local release
-validation.
-
-Before publishing, run the release checklist and confirm the package name/version target.
+validation. Latest release: [v0.1.0](https://github.com/billybox1926-jpg/mdguard/releases/tag/v0.1.0).
 
 ## Install locally
 
