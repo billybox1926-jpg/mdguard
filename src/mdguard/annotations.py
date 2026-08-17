@@ -6,13 +6,21 @@ from mdguard.core import LintIssue
 
 
 def _escape(value: str) -> str:
-    return (
-        value.replace("%", "%25")
-        .replace("\r", "%0D")
+    # Escape % first so our own %XX codes (introduced below) don't get
+    # double-escaped. CRLF pairs are preserved via a placeholder so bare
+    # \r and \n replacements don't split them.
+    value = value.replace("\r\n", "\x00")
+    value = value.replace("%", "%25")
+    value = (
+        value.replace("\r", "%0D")
         .replace("\n", "%0A")
         .replace(":", "%3A")
         .replace(",", "%2C")
+        .replace('"', "%22")
+        .replace("::", "%3A%3A")
     )
+    value = value.replace("\x00", "%0D%0A")
+    return value
 
 
 def render_github_annotations(issues: list[LintIssue]) -> str:

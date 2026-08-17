@@ -20,7 +20,7 @@ BIDI_BYTES = {
 
 EXTENSIONS = {".py", ".md", ".toml", ".yml", ".json"}
 
-bad = []
+bad: list[str] = []
 for root, dirs, files in os.walk("."):
     # Skip hidden dirs and common non-project dirs
     dirs[:] = [
@@ -33,11 +33,12 @@ for root, dirs, files in os.walk("."):
         if any(f.endswith(ext) for ext in EXTENSIONS):
             path = os.path.join(root, f)
             try:
-                data = open(path, "rb").read()
+                with open(path, "rb") as fh:
+                    data = fh.read()
                 for i, b in enumerate(data):
                     if b in BIDI_BYTES:
                         bad.append(f"{path}: byte 0x{b:02x} at offset {i}")
-            except Exception:
+            except OSError:
                 pass
 
 if bad:

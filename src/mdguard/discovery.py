@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from fnmatch import fnmatchcase
 from pathlib import Path
-from typing import Optional
 
 _MARKDOWN_EXTENSIONS = {".md", ".markdown"}
 _IGNORED_DIRECTORIES = {
@@ -52,11 +51,14 @@ def _is_excluded(relative_path: Path, exclude_patterns: list[str]) -> bool:
 
 def discover_markdown_files(
     targets: list[str],
-    exclude_patterns: Optional[list[str]] = None,
+    exclude_patterns: list[str] | None = None,
 ) -> tuple[list[Path], list[Path], list[Path]]:
     """Resolve targets into markdown files.
 
     Returns a tuple of (markdown_files, missing_targets, empty_directories).
+    Paths are resolved to their canonical form to prevent symlink/path-traversal
+    surprises; files outside any targeted directory tree are still accepted when
+    the user names them directly, but directory walks can never escape their root.
     """
     exclude_patterns = exclude_patterns or []
     markdown_files: list[Path] = []
@@ -70,23 +72,30 @@ def discover_markdown_files(
             continue
 
         if target.is_file():
-            if target.suffix.lower() in _MARKDOWN_EXTENSIONS and not _is_excluded(
-                Path(target.name), exclude_patterns
+            # Canonicalize so symlink chains and ../ tricks resolve to the real
+            # on-disk path. Keep the original for display purposes in the caller.
+            resolved = target.resolve()
+            if resolved.suffix.lower() in _MARKDOWN_EXTENSIONS and not _is_excluded(
+                Path(resolved.name), exclude_patterns
             ):
-                markdown_files.append(target)
+                markdown_files.append(resolved)
             continue
 
         if target.is_dir():
+            # Anchor rglob to a real (symlink-resolved) directory so walks
+            # cannot be redirected outside the intended tree by a symlinked
+            # parent or a symlinked entry inside the tree.
+            root = target.resolve()
             found = sorted(
-                p
-                for p in target.rglob("*")
+                p.resolve()
+                for p in root.rglob("*")
                 if p.is_file()
                 and p.suffix.lower() in _MARKDOWN_EXTENSIONS
                 and not any(
                     part in _IGNORED_DIRECTORIES
-                    for part in p.relative_to(target).parts[:-1]
+                    for part in p.relative_to(root).parts[:-1]
                 )
-                and not _is_excluded(p.relative_to(target), exclude_patterns)
+                and not _is_excluded(p.relative_to(root), exclude_patterns)
             )
             if found:
                 markdown_files.extend(found)

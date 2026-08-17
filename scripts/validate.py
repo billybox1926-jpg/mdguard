@@ -54,6 +54,32 @@ def smoke_wheel() -> None:
         run([str(python), "-m", "pip", "install", str(wheel)])
         run([str(mdguard), "--version"])
         run([str(mdguard), "--list-rules", "--verbose"])
+        # Verify the new --security-rules flag is accepted
+        run([str(mdguard), "--security-rules", "--list-rules"])
+
+
+def smoke_security_flags() -> None:
+    """Verify the new security rule CLI flags parse without error."""
+    for flag in ("--enable", "--disable", "--security-rules"):
+        subprocess.run(
+            [PYTHON, "-m", "mdguard.cli", flag, "security-xss", "--list-rules"],
+            cwd=ROOT,
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            [PYTHON, "-m", "mdguard.cli", flag, "security-urls", "--list-rules"],
+            cwd=ROOT,
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            [PYTHON, "-m", "mdguard.cli", flag, "security-secrets", "--list-rules"],
+            cwd=ROOT,
+            capture_output=True,
+            check=True,
+        )
+    print("✅ Security rule flags accepted")
 
 
 def main() -> int:
@@ -70,6 +96,7 @@ def main() -> int:
     assert_json_output()
     run([PYTHON, "-m", "build"])
     smoke_wheel()
+    smoke_security_flags()
     clean()
     run(["git", "diff", "--check"])
     run(["git", "status", "--short"])

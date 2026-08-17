@@ -1,7 +1,7 @@
 import io
 import unittest
-from tempfile import TemporaryDirectory
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from mdguard.core import load_rules, process_file

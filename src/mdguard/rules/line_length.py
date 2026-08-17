@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from mdguard.core import LintIssue, display_width
 
 NAME = "line-length"
@@ -15,7 +13,7 @@ TAGS = ("formatting",)
 ALIASES = ("MD013",)
 
 
-def _configured_max(config: dict) -> Optional[int]:
+def _configured_max(config: dict) -> int | None:
     rule = config.get(NAME)
     if rule is False:
         return None
@@ -27,10 +25,9 @@ def _configured_max(config: dict) -> Optional[int]:
 def _is_markdown_exception(line: str) -> bool:
     stripped = line.strip()
     return (
-        stripped.startswith("|")
-        or stripped.startswith("[!")
-        or stripped.startswith("<")
-        or (stripped.startswith("[") and "]:" in stripped)
+        stripped.startswith(("|", "[!", "<"))
+        or stripped.startswith("[")
+        and "]:" in stripped
         or "http://" in stripped
         or "https://" in stripped
     )

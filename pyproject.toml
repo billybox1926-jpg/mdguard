@@ -29,3 +29,6 @@ mdguard = "mdguard.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/bidi-scan.py" = ["EXE001"]
