@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+import tempfile
 from importlib.metadata import PackageNotFoundError, version
 from json import JSONDecodeError
 from pathlib import Path
-from typing import Optional
 
 from mdguard.annotations import render_github_annotations
 from mdguard.baseline import filter_baselined, load_baseline, write_baseline
@@ -29,7 +30,7 @@ def _unknown_rule_message(source: str, rule_name: str, rules: dict[str, object])
 
 def _validate_rule_names(
     selected_rules: list[str], source: str, rules: dict[str, object]
-) -> Optional[str]:
+) -> str | None:
     for name in selected_rules:
         if name not in rules:
             return _unknown_rule_message(source, name, rules)
@@ -47,17 +48,27 @@ def _load_ignore_file() -> list[str]:
             for line in lines
             if line.strip() and not line.strip().startswith("#")
         ]
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         print(f"⚠️  Could not read .mdguardignore: {exc}", file=sys.stderr)
         return []
 
 
 def _read_stdin(stdin_filename: str) -> Path:
-    synthetic = Path(stdin_filename)
+    """Read stdin into a secure temporary file and return its path.
+
+    Uses mkstemp so the file is created atomically with a random name,
+    avoiding the predictable-name TOCTOU race of the previous implementation.
+    The temp file is cleaned up by the caller after linting finishes.
+    """
     text = sys.stdin.read()
-    temp = Path.cwd() / ".mdguard-stdin.md"
-    temp.write_text(text, encoding="utf-8", newline="")
-    return temp if stdin_filename == "<stdin>" else synthetic
+    fd, temp_path = tempfile.mkstemp(suffix=".mdguard-stdin.md", prefix=".mdguard-")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as handle:
+            handle.write(text)
+    except Exception:
+        os.close(fd)
+        raise
+    return Path(temp_path)
 
 
 def _package_version() -> str:
@@ -118,7 +129,15 @@ def main() -> int:
         help="Emit lint results as JSON",
     )
     parser.add_argument(
-        "--format", choices=["human", "json", "github"], default="human"
+        "--format",
+        choices=["human", "json", "github"],
+        default="human",
+        help="Output format: human, json, or github-actions annotations",
+    )
+    parser.add_argument(
+        "--security-rules",
+        action="store_true",
+        help="Enable built-in security rules (XSS, dangerous URLs, secret patterns)",
     )
     parser.add_argument(
         "--stdin-filename",
@@ -142,11 +161,22 @@ def main() -> int:
             status = "enabled" if rules[name]["default_enabled"] else "disabled"
             if args.verbose:
                 fixable = "fixable" if rules[name].get("fixable") else "manual"
+                tags = rules[name].get("tags", ())
+                group = "security" if "security" in tags else "formatting/style"
                 print(
-                    f"  • {name} ({status}, {fixable}) - {rules[name].get('description', '')}"
+                    f"  • {name} ({status}, {group}, {fixable}) - {rules[name].get('description', '')}"
                 )
             else:
                 print(f"  • {name} ({status})")
+        print()
+        print("Security rules (opt-in):")
+        print("  Enable with: mdguard --security-rules")
+        print(
+            "  Or: mdguard --enable security-xss --enable security-urls --enable security-secrets"
+        )
+        print(
+            '  Or in config: {"rules": {"security-xss": true, "security-urls": true, "security-secrets": true}}'
+        )
         return 0
 
     if not args.files:
@@ -154,6 +184,10 @@ def main() -> int:
         return 1
 
     config: dict[str, object] = {"max_length": 120}
+    if args.security_rules:
+        for name in ("security-xss", "security-urls", "security-secrets"):
+            config[name] = True
+
     tool_config, _, config_error = load_pyproject_config(Path.cwd())
     if config_error:
         print(config_error, file=sys.stderr)
@@ -207,13 +241,12 @@ def main() -> int:
         config[name] = False
 
     targets = list(args.files)
-    stdin_temp: Optional[Path] = None
+    stdin_temp: Path | None = None
     if "-" in targets:
         if args.fix:
             print("--fix is not supported for stdin", file=sys.stderr)
             return 2
-        stdin_temp = Path.cwd() / ".mdguard-stdin.md"
-        stdin_temp.write_text(sys.stdin.read(), encoding="utf-8", newline="")
+        stdin_temp = _read_stdin(args.stdin_filename)
         targets = [str(stdin_temp) if t == "-" else t for t in targets]
 
     markdown_files, missing_targets, empty_directories = discover_markdown_files(

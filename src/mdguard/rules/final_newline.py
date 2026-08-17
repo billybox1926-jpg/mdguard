@@ -3,9 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List
-
-from typing import Optional
 
 from mdguard.core import LintIssue
 
@@ -16,7 +13,7 @@ ALLOW_ADD_LINE_ENDING = True
 
 def check(
     file: Path, line: str, lineno: int, ctx: dict, config: dict
-) -> List[LintIssue]:
+) -> list[LintIssue]:
     """Report when the last line of a non-empty file has no trailing newline."""
     lines = ctx.get("lines", [])
     if not lines or lineno != len(lines):
@@ -28,7 +25,7 @@ def check(
     return []
 
 
-def fix(line: str, ctx: Optional[dict] = None) -> str:
+def fix(line: str, ctx: dict | None = None) -> str:
     """Add exactly one final newline when it is missing, preserving style."""
     if line.endswith(("\n", "\r")):
         return line

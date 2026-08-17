@@ -13,6 +13,13 @@ It is intentionally smaller than the full Markdown linting ecosystem. The goal i
 practical guardrails for solo developers, small repos, Windows/PowerShell users,
 and AI-assisted coding workflows where documentation can get messy fast.
 
+mdguard focuses on formatting consistency (whitespace, line length, heading
+structure, link integrity) with **optional** security-focused rules you can enable
+for CI pipelines and shared documentation: detection of XSS vectors in raw HTML,
+dangerous URI schemes like `javascript:`, and patterns that resemble API keys or
+tokens. These security rules are heuristic and opt-in — they supplement, but do
+not replace, dedicated secret scanners and security review.
+
 ## Status
 
 Working release candidate. The package has a `src/mdguard/` implementation, console entry
@@ -97,7 +104,7 @@ The current implemented configuration surface is CLI-first:
 - `--exclude PATTERN`
 - `--rules rules.json`
 
-`pyproject.toml` support is planned but not implemented yet.
+`pyproject.toml` `[[tool.mdguard]]` configuration is supported alongside the CLI flags.
 
 See [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 

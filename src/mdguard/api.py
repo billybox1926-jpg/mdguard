@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Optional, Union
 
 from mdguard.core import load_rules, process_file
 from mdguard.discovery import discover_markdown_files
@@ -11,11 +11,11 @@ from mdguard.models import RunResult, SkippedFile
 
 
 def lint_paths(
-    paths: Iterable[Union[str, Path]],
+    paths: Iterable[str | Path],
     *,
-    config: Optional[dict[str, object]] = None,
+    config: dict[str, object] | None = None,
     fix: bool = False,
-    exclude_patterns: Optional[list[str]] = None,
+    exclude_patterns: list[str] | None = None,
 ) -> RunResult:
     rules = load_rules()
     markdown_files, missing_targets, empty_dirs = discover_markdown_files(

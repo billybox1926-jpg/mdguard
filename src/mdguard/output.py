@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from importlib import metadata
 from pathlib import Path
-from typing import Optional, TypedDict
+from typing import TypedDict
 
 from mdguard.core import LintIssue
 from mdguard.models import RunResult
@@ -55,7 +55,7 @@ def build_summary(result: RunResult) -> str:
 
 
 def build_json_report(
-    file_issues: list[tuple[Path, list[LintIssue]]], result: Optional[RunResult] = None
+    file_issues: list[tuple[Path, list[LintIssue]]], result: RunResult | None = None
 ) -> JsonLintReport:
     files: list[JsonFileReport] = []
     issue_count = 0

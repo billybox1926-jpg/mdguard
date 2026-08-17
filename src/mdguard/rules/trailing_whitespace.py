@@ -1,7 +1,6 @@
 """Markdown lint rule for trailing whitespace."""
 
 from pathlib import Path
-from typing import List
 
 from mdguard.core import LintIssue
 
@@ -11,7 +10,7 @@ DEFAULT_ENABLED = True
 
 def check(
     file: Path, line: str, lineno: int, ctx: dict, config: dict
-) -> List[LintIssue]:
+) -> list[LintIssue]:
     """Flag trailing whitespace."""
     if line != line.rstrip():
         return [LintIssue(file, lineno, NAME, "trailing whitespace")]

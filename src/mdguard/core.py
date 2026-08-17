@@ -9,7 +9,7 @@ import sys
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional, Tuple
+from typing import Any
 
 
 @dataclass
@@ -39,8 +39,20 @@ def display_width(text: str) -> int:
     return width
 
 
-def read_file_text(path: Path) -> Tuple[Optional[str], Optional[str]]:
+def read_file_text(path: Path) -> tuple[str | None, str | None]:
     """Read file text as UTF-8(-sig) then UTF-16 fallback without newline conversion."""
+    _MAX_BYTES = 10 * 1024 * 1024  # 10 MB
+    try:
+        size = path.stat().st_size
+    except OSError:
+        size = 0
+    if size > _MAX_BYTES:
+        print(
+            f"⚠️  Skipping {path}: file size {size} bytes exceeds "
+            f"the {_MAX_BYTES} byte limit.",
+            file=sys.stderr,
+        )
+        return None, None
     try:
         with path.open("r", encoding="utf-8-sig", newline="") as f:
             return f.read(), "utf-8"
@@ -67,6 +79,9 @@ def load_rules() -> dict[str, Any]:
         "trailing_whitespace",
         "final_newline",
         "internal_anchor",
+        "security_xss",
+        "security_urls",
+        "security_secrets",
     )
     rules: dict[str, Any] = {}
     import_errors: list[str] = []
@@ -90,7 +105,7 @@ def load_rules() -> dict[str, Any]:
                 }
             else:
                 import_errors.append(f"{fqmn} missing NAME/check")
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             import_errors.append(f"{fqmn}: {exc}")
 
     if import_errors:

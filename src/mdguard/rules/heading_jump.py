@@ -1,7 +1,6 @@
 """Markdown lint rule for heading jump."""
 
 from pathlib import Path
-from typing import List
 
 from mdguard.core import LintIssue
 
@@ -11,14 +10,14 @@ DEFAULT_ENABLED = True
 
 def check(
     file: Path, line: str, lineno: int, ctx: dict, config: dict
-) -> List[LintIssue]:
+) -> list[LintIssue]:
     """Flag heading level jumps greater than 1 (e.g., h1 -> h3)."""
     if ctx.get("in_code_block"):
         return []
     if not (match := ctx["heading_re"].match(line)):
         return []
     level = len(match.group(1))
-    issues: List[LintIssue] = []
+    issues: list[LintIssue] = []
 
     if ctx["prev_level"] and level > ctx["prev_level"] + 1:
         issues.append(

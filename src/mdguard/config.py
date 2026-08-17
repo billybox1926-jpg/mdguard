@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Optional, Tuple
+from typing import Any
 
 try:
     import tomllib  # type: ignore[attr-defined]
@@ -17,6 +17,8 @@ def _unquote(value: str) -> str:
 
 def _parse_scalar(value: str) -> Any:
     value = value.strip()
+    if len(value) > 4096:
+        raise ValueError("config value exceeds 4096 character limit")
     if value.startswith("[") and value.endswith("]"):
         inner = value[1:-1].strip()
         if not inner:
@@ -47,8 +49,8 @@ def _parse_tool_mdguard_subset(text: str) -> dict[str, Any]:
 
 
 def load_pyproject_config(
-    start: Optional[Path] = None,
-) -> Tuple[dict[str, Any], Optional[Path], Optional[str]]:
+    start: Path | None = None,
+) -> tuple[dict[str, Any], Path | None, str | None]:
     current = (start or Path.cwd()).resolve()
     if current.is_file():
         current = current.parent
@@ -63,7 +65,7 @@ def load_pyproject_config(
                 config = data.get("tool", {}).get("mdguard", {})
             else:
                 config = _parse_tool_mdguard_subset(text)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             return {}, pyproject, f"invalid pyproject config {pyproject}: {exc}"
         if config:
             if not isinstance(config, dict):
